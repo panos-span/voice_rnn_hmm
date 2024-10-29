@@ -31,7 +31,7 @@ y = np.array(y)
 
 # 3. Διαχωρισμός σε Training και Testing Sets
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y, test_size=0.2, random_state=42
 )
 
 print(f"Training set size: {X_train.shape[0]} samples")
@@ -164,7 +164,7 @@ train_loader = torch.utils.data.DataLoader(
     batch_size=16, shuffle=True
 )
 
-def training(model_name,model,epochs):
+def training(model_name, model, train_loader, optimizer, criterion, device ,epochs):
     for epoch in range(epochs):
         model.train()
         epoch_loss = 0
@@ -173,7 +173,7 @@ def training(model_name,model,epochs):
             labels = labels.to(device)
             
             # Zero the parameter gradients
-            optimizers[model_name].zero_grad()
+            optimizer.zero_grad()
             
             # Forward pass
             outputs = model(inputs)
@@ -181,7 +181,7 @@ def training(model_name,model,epochs):
             
             # Backward and optimize
             loss.backward()
-            optimizers[model_name].step()
+            optimizer.step()
             
             epoch_loss += loss.item()
             

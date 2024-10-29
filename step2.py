@@ -17,6 +17,7 @@ def data_parser(directory):
     
     for filename in os.listdir(directory):
         filepath = os.path.join(directory, filename)
+        # Sr = 16000 γιατί τα αρχεία ήχου έχουν δείγματα στα 16kHz
         wav , sr = librosa.load(filepath, sr=16000)
         wavs.append(wav)
         
