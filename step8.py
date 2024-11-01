@@ -79,10 +79,10 @@ class customRNN(nn.Module):
             # LSTM requires both hidden and cell states
             c0 = torch.zeros(self.num_layers * (2 if self.bidirectional else 1), 
                              x.size(0), self.hidden_size).to(x.device)
-            rnn_out, (hn, cn) = self.model(x, (h0, c0))
+            rnn_out, (_, _) = self.model(x, (h0, c0))
         else:
             # For RNN and GRU, only hidden state is needed
-            rnn_out, hn = self.model(x, h0)
+            rnn_out, _ = self.model(x, h0)
         
         # Pass RNN output through the fully connected layer
         linear_out = self.fc(rnn_out[:, -1, :])
@@ -104,7 +104,7 @@ print(f"Using device: {device}")
 
 simple_rnn_model = customRNN(cell_type="rnn").to(device)
 lstm_model = customRNN(cell_type="lstm", bidirectional=True).to(device)
-gru_model = customRNN(cell_type="gru").to(device)
+gru_model = customRNN(cell_type="gru", bidirectional=True).to(device)
 
 models = {
     'Simple RNN': simple_rnn_model,
@@ -121,7 +121,7 @@ optimizers = { model_name: torch.optim.Adam(model.parameters(), lr=0.001) for mo
 # 9. Εκπαίδευση
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(X_train_tensor, y_train_tensor),
-    batch_size=16, shuffle=True
+    batch_size=16, shuffle=True, random_state=42
 )
 
 def training(model_name, model, train_loader, optimizer, criterion, device ,epochs):
@@ -154,7 +154,7 @@ def training(model_name, model, train_loader, optimizer, criterion, device ,epoc
         
 # Start training
 for model_name, model in models.items():
-    training(model_name, model, train_loader, optimizers[model_name], criterion, device, epochs=100)
+    training(model_name, model, train_loader, optimizers[model_name], criterion, device, epochs=50)
     
 # 10. Αξιολόγηση Μοντέλων
 def evaluate_model(model, X_test_tensor, y_test_tensor, device):
