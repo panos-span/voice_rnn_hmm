@@ -7,7 +7,7 @@ import torch.nn as nn
 # Parameters
 frequency = 40  # Hz
 sampling_rate = 1000  # samples per second
-duration = 2  # seconds
+duration = 1  # seconds
 sequence_length = 10  # samples
 
 # Generate time axis
@@ -47,89 +47,46 @@ y_test_tensor = torch.from_numpy(y_test).float().unsqueeze(-1)
 LSTM
 '''
 
-class LSTMModel(nn.Module):
-    def __init__(self, input_size=1, hidden_size=50, num_layers=2, output_size=1, bidirectional=False):
-        super(LSTMModel, self).__init__()
+class customRNN(nn.Module):
+    def __init__(self,input_size=1,hidden_size=50,num_layers=2,output_size=1,bidirectional=False, cell_type="rnn"):
+        super(customRNN,self).__init__()
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.bidirectional = bidirectional
+        self.cell_type = cell_type
         
-        # Ορισμός LSTM στρώματος
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=bidirectional)
         
-        # Ορισμός πλήρως συνδεδεμένου στρώματος
-        # Εάν είναι bidirectional, το hidden_size διπλασιάζεται
-        self.fc = nn.Linear(hidden_size * 2 if bidirectional else hidden_size, output_size)
-    
+        # Define RNN layer type
+        types = {
+            "rnn": nn.RNN,
+            "lstm": nn.LSTM,
+            "gru": nn.GRU
+        }
+        
+        # Select the cell type
+        self.model = types[cell_type](input_size,hidden_size,num_layers,batch_first=True,bidirectional=bidirectional)
+        
+        # Define fully connected layer for output
+        self.fc = nn.Linear(2 * hidden_size if bidirectional else hidden_size,output_size)
+        
+        
     def forward(self, x):
-        # Αρχικοποίηση των αρχικών κρυφών καταστάσεων
-        num_directions = 2 if self.bidirectional else 1
-        h0 = torch.zeros(self.num_layers * num_directions, x.size(0), self.hidden_size).to(x.device)
-        c0 = torch.zeros(self.num_layers * num_directions, x.size(0), self.hidden_size).to(x.device)
+        # Initialize hidden states
+        h0 = torch.zeros(self.num_layers * (2 if self.bidirectional else 1), 
+                         x.size(0), self.hidden_size).to(x.device)
         
-        # Διέλευση μέσω LSTM
-        out, _ = self.lstm(x, (h0, c0))
+        if self.cell_type == 'lstm':
+            # LSTM requires both hidden and cell states
+            c0 = torch.zeros(self.num_layers * (2 if self.bidirectional else 1), 
+                             x.size(0), self.hidden_size).to(x.device)
+            rnn_out, (hn, cn) = self.model(x, (h0, c0))
+        else:
+            # For RNN and GRU, only hidden state is needed
+            rnn_out, hn = self.model(x, h0)
         
-        # Επιλογή του τελευταίου βήματος της ακολουθίας
-        out = out[:, -1, :]
-        
-        # Διέλευση μέσω πλήρως συνδεδεμένου στρώματος
-        out = self.fc(out)
-        return out
-    
-    
-'''
-GRU
-'''
-
-class GRUModel(nn.Module):
-    
-    def __init__(self, input_size=1, hidden_size=50, num_layers=2, output_size=1):
-        super(GRUModel, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        
-        # Ορισμός GRU στρώματος
-        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)
-        
-        # Ορισμός πλήρως συνδεδεμένου στρώματος
-        self.fc = nn.Linear(hidden_size, output_size)
-        
-    def forward(self,x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-        
-        # Διέλευση μέσω GRU
-        out, _ = self.gru(x, h0)
-        
-        # Επιλογή του τελευταίου βήματος της ακολουθίας
-        out = out[:, -1, :]
-        
-        # Διέλευση μέσω πλήρως συνδεδεμένου στρώματος
-        out = self.fc(out)
-        return out
-    
-class RNNModel(nn.Module):
-    
-    def __init__(self,input_size=1, hidden_size=50,num_layers=2,output_size=1):
-        
-        super(RNNModel,self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        
-        self.rnn = nn.RNN(input_size,hidden_size,num_layers,batch_first=True)
-        
-        self.fc = nn.Linear(hidden_size,output_size)
-        
-    def forward(self,x):
-        h0 = torch.zeros(self.num_layers,x.size(0),self.hidden_size).to(x.device)
-        
-        out,_ = self.rnn(x,h0)
-        
-        out = out[:,-1,:]
-        
-        out = self.fc(out)
-        
-        return out
+        # Pass RNN output through the fully connected layer
+        linear_out = self.fc(rnn_out[:, -1, :])
+        return linear_out
 
 
 '''
@@ -141,9 +98,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f"Using device: {device}")
 
 # 7. Δημιουργία μοντέλων
-simple_rnn_model = RNNModel().to(device)
-lstm_model = LSTMModel(bidirectional=True).to(device)  # Επιλογή Bidirectional
-gru_model = GRUModel().to(device)
+#simple_rnn_model = RNNModel().to(device)
+#lstm_model = LSTMModel(bidirectional=True).to(device)  # Επιλογή Bidirectional
+#gru_model = GRUModel().to(device)
+
+simple_rnn_model = customRNN(cell_type="rnn").to(device)
+lstm_model = customRNN(cell_type="lstm", bidirectional=True).to(device)
+gru_model = customRNN(cell_type="gru").to(device)
 
 models = {
     'Simple RNN': simple_rnn_model,
@@ -158,7 +119,6 @@ optimizers = { model_name: torch.optim.Adam(model.parameters(), lr=0.001) for mo
 
 
 # 9. Εκπαίδευση
-
 train_loader = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(X_train_tensor, y_train_tensor),
     batch_size=16, shuffle=True
@@ -207,6 +167,14 @@ def evaluate_model(model, X_test_tensor, y_test_tensor, device):
         # Calculate Mean Absolute Error
         mae = nn.L1Loss()(outputs, targets).item()
     return loss, mae, outputs.cpu().numpy()
+
+# Make Predictions 
+def predict(model, X_test_tensor, device):
+    model.eval()
+    with torch.no_grad():
+        inputs = X_test_tensor.to(device)
+        outputs = model(inputs)
+    return outputs.cpu().numpy()
 
 # Prepare for the plot of the true vs predicted values
 plt.figure(figsize=(12, 8))

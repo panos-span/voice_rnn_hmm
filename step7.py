@@ -1,10 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-import os
-import re
+
 import librosa
 from plot_confusion_matrix import plot_confusion_matrix
 from sklearn.preprocessing import StandardScaler
@@ -13,6 +11,8 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 from sklearn.metrics import f1_score
+# import one-hot encoder
+from sklearn.preprocessing import OneHotEncoder
 
 from step2 import data_parser
 from step3 import extract_mfccs
@@ -33,6 +33,7 @@ unique_digits, digit_to_color, digit_to_marker = assign_colors_markers(labels)
 
 # Step 7: Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3, random_state=42, stratify=labels)
+
 
 '''
 CustomBayesClassifier
@@ -123,7 +124,7 @@ clfs = {
     'Gaussian Naive Bayes': GaussianNB(),
     'SVM': SVC(kernel='linear', random_state=42),
     'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
-    'CatBoost': CatBoostClassifier(n_estimators=100, use_label_encoder=False, eval_metric='mlogloss')
+    'CatBoost': CatBoostClassifier(n_estimators=100, random_state=42)
 }
 
 # Build pipelines for each classifier
@@ -205,17 +206,17 @@ def compute_feature_vectors_enhanced(mfccs, digits, wavs):
         zcr_mean = np.mean(zcr)
         zcr_std = np.std(zcr)
         
-        # Compute Spectral Centroid
-        spectral_centroid = librosa.feature.spectral_centroid(y=wav, sr=16000)
-        spectral_centroid_mean = np.mean(spectral_centroid)
-        spectral_centroid_std = np.std(spectral_centroid)
+        # Compute Polynomial-Features
+        poly = librosa.feature.poly_features(y=wav, sr=16000, hop_length=20, win_length=25, order=3)
+        poly_mean = np.mean(poly)
+        poly_std = np.std(poly)
         
         # Concatenate all features into a single vector
         feature_vector = np.concatenate((
             mean_features,       # 39
             std_features,        # 39
             [zcr_mean, zcr_std], # 2
-            [spectral_centroid_mean, spectral_centroid_std] # 2
+            [poly_mean, poly_std] # 2
         ))  # Total length: 39 + 39 + 2 + 2 = 82
         
         feature_vectors.append(feature_vector)
@@ -226,7 +227,7 @@ def compute_feature_vectors_enhanced(mfccs, digits, wavs):
 
 
 # Step 5: Compute feature vectors
-feature_vectors, labels = compute_feature_vectors_enhanced(mfccs)
+feature_vectors, labels = compute_feature_vectors_enhanced(mfccs, digits, wavs)
 
 # Step 7: Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(feature_vectors, labels, test_size=0.3, random_state=42, stratify=labels)

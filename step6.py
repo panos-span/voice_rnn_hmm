@@ -1,5 +1,4 @@
-import librosa
-import numpy as np
+# Βήμα 6
 import matplotlib.pyplot as plt
 from step2 import data_parser
 from step3 import extract_mfccs
@@ -7,7 +6,6 @@ from step5 import compute_feature_vectors, assign_colors_markers
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from mpl_toolkits.mplot3d import Axes3D  # For 3D plotting
 
 # Step 2: Load data
 wavs, speakers, digits = data_parser('./data/digits/')
@@ -44,8 +42,8 @@ pca_2 = create_scaling_pca_pipeline(n_components=2)
 # Fit PCA on the feature vectors and transform the data
 principal_components_2 = pca_2.fit_transform(feature_vectors)
 
-# Retrieve the percentage of variance explained by each principal component
-variance_2 = pca_2.explained_variance_ratio_
+# Retrieve the percentage of variance explained by each principal component from the pipeline
+variance_2 = pca_2.named_steps['pca'].explained_variance_ratio_
 
 print(f"Variance Retained by the first two principal components: {variance_2.sum()*100:.2f}%")
 
@@ -54,7 +52,8 @@ PCA 2D Plot
 '''
 
 # Assign colors and markers to each digit
-digit_to_color, digit_to_marker, unique_digits = assign_colors_markers(labels)
+unique_digits, digit_to_color, digit_to_marker = assign_colors_markers(labels)
+
 
 # Initialize the plot
 plt.figure(figsize=(12, 8))
@@ -76,6 +75,8 @@ plt.title('PCA Scatter Plot (2 Dimensions)')
 plt.xlabel(f'Principal Component 1 ({variance_2[0]*100:.2f}% Variance)')
 plt.ylabel(f'Principal Component 2 ({variance_2[1]*100:.2f}% Variance)')
 plt.grid(True)
+# Save the plot
+plt.savefig('images/pca_2d_plot.png')
 plt.show()
 
 '''
@@ -89,7 +90,7 @@ pca_3 = create_scaling_pca_pipeline(n_components=3)
 principal_components_3 = pca_3.fit_transform(feature_vectors)
 
 # Retrieve the percentage of variance explained by each principal component
-variance_3 = pca_3.explained_variance_ratio_
+variance_3 = pca_3.named_steps['pca'].explained_variance_ratio_
 
 print(f"Variance Retained by the first three principal components: {variance_3.sum()*100:.2f}%")
 
@@ -118,7 +119,8 @@ ax.set_title('PCA Scatter Plot (3 Dimensions)')
 ax.set_xlabel(f'Principal Component 1 ({variance_3[0]*100:.2f}% Variance)')
 ax.set_ylabel(f'Principal Component 2 ({variance_3[1]*100:.2f}% Variance)')
 ax.set_zlabel(f'Principal Component 3 ({variance_3[2]*100:.2f}% Variance)')
-
+# Save the plot
+plt.savefig('images/pca_3d_plot.png')
 plt.show()
 
 

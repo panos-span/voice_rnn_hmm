@@ -1,10 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import itertools
-import matplotlib.pyplot as plt
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
-                          title='Confusion matrix',
+                          title='Confusion Matrix',
                           cmap=plt.cm.Blues):
     """
     This function prints and plots the confusion matrix.
@@ -16,22 +16,27 @@ def plot_confusion_matrix(cm, classes,
     else:
         print('Confusion matrix, without normalization')
 
-    print(cm)
-
+    plt.figure(figsize=(10, 8))  # Increase figure size for clarity
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
+    plt.title(title, fontsize=16)
     plt.colorbar()
+    
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    plt.xticks(tick_marks, classes, rotation=45, ha="right", fontsize=10)  # Rotate x labels for better readability
+    plt.yticks(tick_marks, classes, fontsize=10)
 
     fmt = '.2f' if normalize else 'd'
     thresh = cm.max() / 2.
+    
+    # Iterate over data dimensions and create text annotations.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, format(cm[i, j], fmt),
                  horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+                 color="white" if cm[i, j] > thresh else "black",
+                 fontsize=9)  # Adjust font size for better readability
 
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
     plt.tight_layout()
+    plt.ylabel('True label', fontsize=12)
+    plt.xlabel('Predicted label', fontsize=12)
+    # Save the plot
+    plt.savefig('images/confusion_matrix.png')

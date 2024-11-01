@@ -7,7 +7,6 @@
 χρώμα και σύμβολο για κάθε ψηφίο. Σχολιάστε το διάγραμμα.
 '''
 
-import librosa
 import numpy as np
 import matplotlib.pyplot as plt
 from step3 import extract_mfccs

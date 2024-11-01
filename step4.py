@@ -93,8 +93,21 @@ def process_utterance(wav):
 
     return log_S, mfcc
 
-# Process each selected utterance
-for idx in selected_indices:
+# Define the number of utterances and the grid layout
+num_utterances = len(selected_indices)
+cols = 2  # Number of columns
+rows = (num_utterances + 1) // cols  # Calculate rows based on number of utterances
+
+# Initialize figures for MFSCs and MFCCs
+fig_mfsc, axes_mfsc = plt.subplots(rows, cols, figsize=(12, 5 * rows))
+fig_mfcc, axes_mfcc = plt.subplots(rows, cols, figsize=(12, 5 * rows))
+
+# Flatten axes for easy indexing
+axes_mfsc = axes_mfsc.flatten()
+axes_mfcc = axes_mfcc.flatten()
+
+# Loop over each selected utterance
+for i, idx in enumerate(selected_indices):
     if idx is not None:
         wav = wavs[idx]
         digit = digit_labels[idx]
@@ -108,21 +121,36 @@ for idx in selected_indices:
         corr_mfcc = np.corrcoef(mfcc)
 
         # Plot correlation matrix for MFSCs
-        plt.figure(figsize=(6, 5))
-        plt.imshow(corr_mfsc, cmap='viridis', interpolation='nearest')
-        plt.title(f'Correlation Matrix of MFSCs\nDigit: {digit}, Speaker: {speaker}')
-        plt.colorbar()
-        plt.xlabel('MFSC Coefficient Index')
-        plt.ylabel('MFSC Coefficient Index')
-        plt.show()
+        ax_mfsc = axes_mfsc[i]
+        ax_mfsc.imshow(corr_mfsc, interpolation='nearest', cmap='inferno')
+        ax_mfsc.set_title(f'MFSC Correlation\nDigit: {digit}, Speaker: {speaker}')
+        ax_mfsc.set_xlabel('MFSC Coefficient Index')
+        ax_mfsc.set_ylabel('MFSC Coefficient Index')
 
         # Plot correlation matrix for MFCCs
-        plt.figure(figsize=(6, 5))
-        plt.imshow(corr_mfcc, cmap='viridis', interpolation='nearest')
-        plt.title(f'Correlation Matrix of MFCCs\nDigit: {digit}, Speaker: {speaker}')
-        plt.colorbar()
-        plt.xlabel('MFCC Coefficient Index')
-        plt.ylabel('MFCC Coefficient Index')
-        plt.show()
+        ax_mfcc = axes_mfcc[i]
+        ax_mfcc.imshow(corr_mfcc, cmap='inferno', interpolation='nearest')
+        ax_mfcc.set_title(f'MFCC Correlation\nDigit: {digit}, Speaker: {speaker}')
+        ax_mfcc.set_xlabel('MFCC Coefficient Index')
+        ax_mfcc.set_ylabel('MFCC Coefficient Index')
     else:
         print('Selected index not found.')
+
+# Hide any empty subplots
+for j in range(i + 1, len(axes_mfsc)):
+    axes_mfsc[j].axis('off')
+    axes_mfcc[j].axis('off')
+
+# Adjust layout for spacing between subplots
+fig_mfsc.subplots_adjust(hspace=0.4, wspace=0.3)  # Adjust vertical (hspace) and horizontal (wspace) spacing
+fig_mfcc.subplots_adjust(hspace=0.4, wspace=0.3)
+
+# Add colorbars and set figure titles
+fig_mfsc.colorbar(axes_mfsc[0].images[0], ax=axes_mfsc[:i + 1], orientation='vertical', fraction=0.02, pad=0.04)
+fig_mfcc.colorbar(axes_mfcc[0].images[0], ax=axes_mfcc[:i + 1], orientation='vertical', fraction=0.02, pad=0.04)
+
+# Save the combined figures
+fig_mfsc.savefig('images/corr_mfsc_combined.png')
+fig_mfcc.savefig('images/corr_mfcc_combined.png')
+
+plt.show()

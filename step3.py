@@ -18,6 +18,3 @@ def extract_mfccs(wavs):
         mfccs.append((mfcc, delta, delta2))
         
     return mfccs
-
-
-
