@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import torch.nn as nn
-import math
 from parser import parser
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
@@ -247,19 +246,19 @@ def training_loop(model, train_dataloader, optimizer, criterion):
         # Move data to the appropriate device
         features = features.to(device)
         labels = labels.to(device)
-        lengths = lengths.to(device)
+        #lengths = lengths.to(device)
         
         '''
         BONUS
         '''
         
         # lengths should remain on CPU for pack_padded_sequence
-        #lengths = lengths.cpu().long()
-#
-        ## Sort sequences by lengths in descending order
-        #lengths, perm_idx = lengths.sort(0, descending=True)
-        #features = features[perm_idx]
-        #labels = labels[perm_idx]
+        lengths = lengths.cpu().long()
+
+        # Sort sequences by lengths in descending order
+        lengths, perm_idx = lengths.sort(0, descending=True)
+        features = features[perm_idx]
+        labels = labels[perm_idx]
         
         '''
         '''
@@ -293,7 +292,10 @@ def evaluation_loop(model, dataloader, criterion):
             # Move data to the appropriate device
             features = features.to(device)
             labels = labels.to(device)
-            lengths = lengths.to(device)
+            #lengths = lengths.to(device)
+            
+            # lengths should remain on CPU for pack_padded_sequence
+            lengths = lengths.cpu().long()
             
             # Sort sequences by length in descending order
             lengths, sort_idx = lengths.sort(0, descending=True)
@@ -348,7 +350,12 @@ def train(train_dataloader, val_dataloader, criterion):
         # Check if current model is the best
         if early_stopping.is_best(valid_loss):
             print("New best model found! Saving checkpoint.")
-            torch.save(model.state_dict(), best_model_path)
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'valid_loss': valid_loss,
+                'epoch': epoch,
+            }, best_model_path)
                     
         if early_stopping.stop(valid_loss):
             print("Early stopping...")
@@ -357,6 +364,9 @@ def train(train_dataloader, val_dataloader, criterion):
     print(f"Training took: {time.time() - start_time:.2f} seconds")
     cm = confusion_matrix(y_pred, y_true, normalize='true')
     plot_confusion_matrix(cm, classes=np.arange(10), normalize=True, title='Validation Confusion Matrix Step 14')
+    # Return the best model and the training history
+    checkpoint = torch.load(best_model_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
     return model, history
 
 
