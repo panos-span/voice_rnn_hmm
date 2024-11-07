@@ -2,12 +2,11 @@ import numpy as np
 from pomegranate.distributions import Normal
 from pomegranate.gmm import GeneralMixtureModel
 from pomegranate.hmm import DenseHMM
-from parser2 import parser
+from parser import parser
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, confusion_matrix
 from plot_confusion_matrix import plot_confusion_matrix
-from parser2 import parser
 
 # TODO: YOUR CODE HERE
 # Play with diffrent variations of parameters in your experiments
@@ -30,7 +29,7 @@ def gather_in_dic(X, labels, spk):
 
 
 def create_data():
-    X, X_test, y, y_test, spk, spk_test = parser("./recordings", n_mfcc=13)
+    X, X_test, y, y_test, spk, spk_test = parser("./free-spoken-digit-dataset-1.0.10/recordings", n_mfcc=13)
 
     # TODO: YOUR CODE HERE
     (
@@ -66,17 +65,18 @@ def initialize_and_fit_normal_distributions(X, n_states):
     for _ in range(n_states):
         # TODO: YOUR CODE HERE
         d = Normal()  # Fit a normal distribution on X
+        d.fit(np.concatenate(X))
         dists.append(d)
     return dists
 
 
 def initialize_transition_matrix(n_states):
-    # TODO: YOUR CODE HERE
-    # Make sure the dtype is np.float32
     A = np.zeros((n_states, n_states), dtype=np.float32)
     for i in range(n_states):
-        A[i, i] = 0.5
-        if i < n_states - 1:
+        if i == n_states - 1:
+            A[i, i] = 1.0
+        else:
+            A[i, i] = 0.5
             A[i, i + 1] = 0.5
     return A
 
@@ -109,6 +109,8 @@ def train_single_hmm(X, emission_model, digit, n_states):
         starts=start_probs,
         ends=end_probs,
         verbose=True,
+        max_iter=100,
+        tol=1e-3,
     ).fit(data)
     return model
 

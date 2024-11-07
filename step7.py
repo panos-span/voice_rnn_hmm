@@ -12,7 +12,6 @@ from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 from sklearn.metrics import f1_score
 # import one-hot encoder
-from sklearn.preprocessing import OneHotEncoder
 
 from step2 import data_parser
 from step3 import extract_mfccs
@@ -123,8 +122,8 @@ clfs = {
     'Custom Bayesian': CustomBayesClassifier(),
     'Gaussian Naive Bayes': GaussianNB(),
     'SVM': SVC(kernel='linear', random_state=42),
-    'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
-    'CatBoost': CatBoostClassifier(n_estimators=100, random_state=42)
+    'Random Forest': RandomForestClassifier(n_estimators=50, random_state=42),
+    'CatBoost': CatBoostClassifier(n_estimators=100, random_state=42, verbose=0)
 }
 
 # Build pipelines for each classifier
@@ -170,6 +169,14 @@ print(f"Best Classifier based on Accuracy: {best_accuracy}")
 # Get the best classifier based on f1 score
 best_f1 = max(results, key=lambda x: results[x]['f1'])
 print(f"Best Classifier based on F1 Score: {best_f1}")
+
+# Gather results in a df for all classifiers and compare them
+import pandas as pd
+
+results_df = pd.DataFrame(results).T
+results_df = results_df.sort_values(by='accuracy', ascending=False)
+print(results_df)
+
 
 '''
 Bonus
@@ -263,3 +270,10 @@ print(f"Best Classifier based on Accuracy: {best_accuracy}")
 # Get the best classifier based on f1 score
 best_f1 = max(results, key=lambda x: results[x]['f1'])
 print(f"Best Classifier based on F1 Score: {best_f1}")
+
+# Gather results in a df for all classifiers and compare them
+
+
+results_df = pd.DataFrame(results).T
+results_df = results_df.sort_values(by='accuracy', ascending=False)
+print(results_df)

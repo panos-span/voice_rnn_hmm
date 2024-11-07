@@ -39,4 +39,4 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label', fontsize=12)
     plt.xlabel('Predicted label', fontsize=12)
     # Save the plot
-    plt.savefig('images/confusion_matrix.png')
+    plt.savefig(f'images/{title}.png')
