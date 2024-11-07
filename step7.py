@@ -254,7 +254,7 @@ for clf_name, pipeline in pipelines.items():
     
     
 # Compare classifiers based on accuracy and f1 score
-print("\nComparison of Classifiers:")
+print("\nComparison of Classifiers Enchanced:")
 
 # Get the best classifier based on accuracy
 best_accuracy = max(results, key=lambda x: results[x]['accuracy'])

@@ -9,6 +9,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{booktabs}  % For better looking tables
 \usepackage{hyperref}
 \usepackage{xcolor}
 
@@ -24,8 +25,6 @@
   extendedchars=true,
   literate={β}{{\beta}}1
 }
-
-Για την κατασκευή του ``data_parser`` 
 
 \title{Αναγνώριση Προτύπων \\ 1η Εργαστηριακή Άσκηση \\ Χειμερινό Εξάμηνο 2024-2025 \\ Ε.ΔE.ΜΜ}
 \author{Σπανάκης Παναγιώτης-Αλέξιος (ΑΜ: 03400274)}
@@ -299,5 +298,163 @@ MFCCs αποτελούν πιο διακριτά χαρακτηριστικά π
 
 
 \section*{Βήμα 7}
+
+Για την ταξινόμηση των ηχητικών δεδομένων, ακολουθήθηκε η εξής διαδικασία:
+
+Αρχικά, τα δεδομένα χωρίστηκαν σε σύνολα εκπαίδευσης (70\%) και ελέγχου (30\%) 
+χρησιμοποιώντας τη συνάρτηση \texttt{train\_test\_split} με \texttt{stratify=labels} 
+για να διασφαλιστεί η ισορροπημένη κατανομή των κλάσεων. Πριν την εκπαίδευση, 
+εφαρμόστηκε κανονικοποίηση στα δεδομένα χρησιμοποιώντας το \texttt{StandardScaler}.
+
+Χρησιμοποιήθηκαν συνολικά 5 ταξινομητές:
+\begin{enumerate}
+   \item Custom Bayesian (από την πρώτη εργαστηριακή άσκηση)
+   \item Gaussian Naive Bayes (από scikit-learn)
+   \item SVM (με γραμμικό kernel)
+   \item Random Forest (με 100 δέντρα)
+   \item CatBoost
+\end{enumerate}
+
+Τα αρχικά αποτελέσματα έδειξαν παρόμοια απόδοση για όλους τους ταξινομητές:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\hline
+\textbf{Ταξινομητής} & \textbf{Ακρίβεια} & \textbf{F1-Score} \\
+\hline
+Custom Bayesian & 65.00\% & 63.51\% \\
+Gaussian Naive Bayes & 65.00\% & 63.51\% \\
+SVM & 65.00\% & 62.52\% \\
+Random Forest & 65.00\% & 64.82\% \\
+CatBoost & 67.50\% & 65.30\% \\
+\hline
+\end{tabular}
+\caption{Αρχικά αποτελέσματα ταξινόμησης}
+\end{table}
+
+\textbf{Bonus: Προσθήκη Επιπλέον Χαρακτηριστικών}
+
+Για το bonus μέρος, προστέθηκαν επιπλέον χαρακτηριστικά στο διάνυσμα:
+
+\begin{enumerate}
+   \item Zero-Crossing Rate (ZCR): Αποτελεί ένα από τα βασικότερα χαρακτηριστικά στο πεδίο του χρόνου 
+   και υπολογίζει το ρυθμό με τον οποίο το σήμα αλλάζει πρόσημο \cite{kedem1986spectral}. Είναι ιδιαίτερα 
+   χρήσιμο για την αναγνώριση ομιλίας καθώς συσχετίζεται με το φασματικό περιεχόμενο του σήματος \cite{bachu2010voiced}.
+   
+   \item Πολυωνυμικά χαρακτηριστικά (Polynomial Features): Χρησιμοποιούνται για την καταγραφή της 
+   φασματικής παραμόρφωσης και την εκτίμηση της φασματικής περιβάλλουσας \cite{noll1967cepstrum}. Παρέχουν 
+   πληροφορίες για τη δομή των αρμονικών συχνοτήτων του σήματος.
+\end{enumerate}
+
+Η προσθήκη των επιπλέον χαρακτηριστικών οδήγησε σε σημαντική βελτίωση των αποτελεσμάτων:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\hline
+\textbf{Ταξινομητής} & \textbf{Ακρίβεια} & \textbf{F1-Score} & \textbf{Βελτίωση Ακρίβειας} \\
+\hline
+Custom Bayesian & 65.00\% & 63.84\% & 0\% \\
+Gaussian Naive Bayes & 65.00\% & 63.84\% & 0\% \\
+SVM & 72.50\% & 72.16\% & +7.5\% \\
+Random Forest & 62.50\% & 63.31\% & -2.5\% \\
+CatBoost & 80.00\% & 79.94\% & +12.5\% \\
+\hline
+\end{tabular}
+\caption{Αποτελέσματα μετά την προσθήκη επιπλέον χαρακτηριστικών}
+\end{table}
+
+\textbf{Συμπεράσματα}
+
+Η σημαντική βελτίωση μπορεί να αποδοθεί στο ότι τα επιπρόσθετα χαρακτηριστικά παρείχαν 
+συμπληρωματική πληροφορία για τη διάκριση των ψηφίων, ιδιαίτερα το ZCR που καταγράφει 
+τις μεταβολές του σήματος στο πεδίο του χρόνου και τα πολυωνυμικά χαρακτηριστικά που 
+αποτυπώνουν επιπλέον πληροφορία στο πεδίο της συχνότητας. Ο CatBoost φαίνεται να 
+αξιοποίησε καλύτερα αυτή την επιπρόσθετη πληροφορία, οδηγώντας στη σημαντική βελτίωση 
+της απόδοσής του τόσο στην ακρίβεια όσο και στο F1-Score (79.94\%). Αξιοσημείωτη 
+είναι επίσης η βελτίωση του SVM, που πέτυχε F1-Score 72.16\%. Αντίθετα, οι Bayesian 
+ταξινομητές και ο Random Forest δεν κατάφεραν να αξιοποιήσουν αποτελεσματικά τα 
+επιπλέον χαρακτηριστικά.
+
+\section*{Βήμα 8}
+
+
+
+
+\section*{Αναγνώριση Ψηφίων με GMM-HMM}
+
+\subsection*{Βήμα 9: Διαχωρισμός Δεδομένων}
+
+Αρχικά, τα δεδομένα εκπαίδευσης διαχωρίστηκαν σε training και validation set με αναλογία 80\%-20\% χρησιμοποιώντας τη συνάρτηση \texttt{train\_test\_split} της βιβλιοθήκης scikit-learn. Η παράμετρος \texttt{stratify=labels} εξασφάλισε την ισορροπημένη κατανομή των ψηφίων στα δύο σύνολα:
+
+\begin{verbatim}
+X_train, X_val, y_train, y_val, spk_train, spk_val = train_test_split(
+   X, y, spk, test_size=0.2, random_state=42, stratify=y)
+\end{verbatim}
+
+\subsection*{Βήμα 10: Υλοποίηση GMM-HMM}
+
+\subsubsection*{Αρχικοποίηση Μοντέλου}
+Υλοποιήθηκε ένα GMM-HMM μοντέλο για κάθε ψηφίο με τις εξής προδιαγραφές:
+
+\begin{itemize}
+   \item \texttt{n\_states = 2}: Αριθμός καταστάσεων HMM
+   \item \texttt{n\_mixtures = 2}: Αριθμός Gaussian κατανομών στο μείγμα
+   \item \texttt{covariance\_type = "diag"}: Διαγώνιος πίνακας συνδιακύμανσης
+\end{itemize}
+
+\subsubsection*{Δομή Left-Right HMM}
+Ο πίνακας μεταβάσεων $A = \{a_{ij}\}$ αρχικοποιήθηκε ως left-right με τους εξής περιορισμούς:
+\begin{itemize}
+   \item $a_{ij} = 0$ για $j < i$ (απαγόρευση μεταβάσεων προς τα πίσω)
+   \item $a_{ij} = 0$ για $j > i + 1$ (επιτρέπονται μόνο μεταβάσεις σε διαδοχικές καταστάσεις)
+   \item Αρχικές πιθανότητες: $\pi_i = \begin{cases} 1 & \text{για } i = 1 \\ 0 & \text{για } i \neq 1 \end{cases}$
+\end{itemize}
+
+\subsection*{Εκπαίδευση με τον Αλγόριθμο EM (Baum-Welch)}
+
+Η εκπαίδευση των GMM-HMM μοντέλων πραγματοποιήθηκε με τον αλγόριθμο Baum-Welch (ειδική περίπτωση του EM) μέσω της μεθόδου \texttt{fit} της βιβλιοθήκης Pomegranate:
+
+\begin{verbatim}
+model = DenseHMM(
+   distributions=emission_model,
+   edges=A,
+   starts=start_probs,
+   ends=end_probs,
+   verbose=True
+).fit(data)
+\end{verbatim}
+
+Ο αλγόριθμος εκτελεί επαναληπτικά:
+
+\begin{enumerate}
+   \item \textbf{E-step (Expectation)}:
+   \begin{itemize}
+       \item Forward-backward αλγόριθμος για υπολογισμό αναμενόμενων μεταβάσεων
+       \item Υπολογισμός πιθανοτήτων κρυφών καταστάσεων
+   \end{itemize}
+
+   \item \textbf{M-step (Maximization)}:
+   \begin{itemize}
+       \item Ενημέρωση παραμέτρων GMM
+       \item Επανεκτίμηση πιθανοτήτων μετάβασης
+       \item Βελτιστοποίηση για μεγιστοποίηση πιθανοφάνειας
+   \end{itemize}
+\end{enumerate}
+
+\subsection*{Αξιολόγηση Μοντέλου}
+
+Για την αξιολόγηση του μοντέλου:
+
+\begin{itemize}
+   \item Υπολογίστηκαν προβλέψεις για κάθε ακολουθία χρησιμοποιώντας τη μέθοδο \texttt{predict}
+   \item Υπολογίστηκε το σκορ ακρίβειας στο validation και test set
+   \item Δημιουργήθηκαν πίνακες σύγχυσης για οπτικοποίηση των αποτελεσμάτων
+\end{itemize}
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \end{document}

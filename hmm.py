@@ -40,7 +40,7 @@ def create_data():
         y_val,
         spk_train,
         spk_val,
-    ) = train_test_split(X, y, spk, test_size=0.2, random_state=42)
+    ) = train_test_split(X, y, spk, test_size=0.2, random_state=42, stratify=y)
     train_dic = gather_in_dic(X_train, y_train, spk_train)
     val_dic = gather_in_dic(X_val, y_val, spk_val)
     test_dic = gather_in_dic(X_test, y_test, spk_test)
