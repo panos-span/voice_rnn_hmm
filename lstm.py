@@ -77,15 +77,9 @@ class FrameLevelDataset(Dataset):
         labels: List of integer labels for each sequence
         """
         self.lengths = [len(i) for i in feats]
-        self.feats = self.zero_pad_and_stack(feats)
+        self.feats = feats  # Store raw sequences without padding
         if isinstance(labels, (list, tuple)):
             self.labels = np.array(labels).astype("int64")
-
-    def zero_pad_and_stack(self, x: np.ndarray) -> np.ndarray:
-        padded = np.zeros((len(x), max(self.lengths), x[0].shape[1]))
-        for i, seq in enumerate(x):
-            padded[i, : len(seq)] = seq
-        return padded
 
     def __getitem__(self, item):
         features = torch.tensor(self.feats[item], dtype=torch.float32)
@@ -95,6 +89,33 @@ class FrameLevelDataset(Dataset):
 
     def __len__(self):
         return len(self.feats)
+
+
+def collate_fn(batch):
+    """
+    Custom collate function to be used with DataLoader.
+    The function sorts sequences in the batch in descending order of their lengths.
+    Args:
+        batch: List of tuples (features, labels, lengths)
+    Returns:
+        features_padded: Padded features tensor
+        labels: labels tensor
+        lengths: lengths tensor
+    """
+    # Unpack the batch
+    features_list, labels_list, lengths_list = zip(*batch)
+    lengths = torch.tensor(lengths_list, dtype=torch.int64)
+    labels = torch.tensor(labels_list, dtype=torch.int64)
+
+    # Sort the batch in descending order of lengths
+    lengths, perm_idx = lengths.sort(0, descending=True)
+    features_list = [features_list[i] for i in perm_idx]
+    labels = labels[perm_idx]
+
+    # Now pad the sequences
+    features_padded = nn.utils.rnn.pad_sequence(features_list, batch_first=True)
+
+    return features_padded, labels, lengths
 
 
 class BasicLSTM(nn.Module):
@@ -128,36 +149,8 @@ class BasicLSTM(nn.Module):
         x : Tensor of shape [N x L x D]
         lengths: Tensor of shape [N]
         """
-        # Sort sequences by length in descending order
-        lengths, perm_idx = lengths.sort(0, descending=True)
-        x = x[perm_idx]
-        
-        # Pack the sorted sequences
-        packed_input = nn.utils.rnn.pack_padded_sequence(
-            x, lengths.cpu(), batch_first=True
-        )
-
-        # Pass through LSTM
-        packed_output, (h_n, c_n) = self.lstm(packed_input)
-
-        # For bidirectional LSTM, concatenate the final forward and backward hidden states
-        if self.bidirectional:
-            h_n = h_n.view(self.lstm.num_layers, 2, x.size(0), self.lstm.hidden_size)
-            h_n = h_n[-1]
-            h_n = torch.cat((h_n[0], h_n[1]), dim=1)
-        else:
-            h_n = h_n[-1]
-
-        # Apply dropout and fully connected layer
-        out = self.dropout(h_n)
-        out = self.fc(out)
-        
-        # Restore original sequence order
-        _, unperm_idx = perm_idx.sort(0)
-        out = out[unperm_idx]
-
-        return out
-        
+        # Pack the sequences
+        packed_input = nn.utils.rnn.pack_padded_sequence(x, lengths.cpu(), batch_first=True)
         # Initialize hidden and cell states with zeros
         h_0 = torch.zeros(
             self.lstm.num_layers * (2 if self.bidirectional else 1),
@@ -172,47 +165,34 @@ class BasicLSTM(nn.Module):
             device=x.device
         )
 
-        # LSTM forward pass
-        out, _ = self.lstm(x, (h_0, c_0))
+        # LSTM forward pass with packed input
+        packed_output, (h_n, c_n) = self.lstm(packed_input, (h_0, c_0))
 
-        # Get the outputs from the last timestep
-        last_outputs = self.last_timestep(out, lengths, bidirectional=self.bidirectional)
-        return self.fc(last_outputs)
+        # h_n shape: (num_layers * num_directions, batch, hidden_size)
+        # Reshape h_n to (num_layers, num_directions, batch, hidden_size)
+        num_layers = self.lstm.num_layers
+        num_directions = 2 if self.bidirectional else 1
+        h_n = h_n.view(num_layers, num_directions, x.size(0), self.rnn_size)
 
-    def last_timestep(self, outputs, lengths, bidirectional=False):
-        """
-        Returns the last output of the LSTM taking into account the sequence lengths
-        """
-        if bidirectional:
-            forward, backward = self.split_directions(outputs)
-            last_forward = self.last_by_index(forward, lengths)
-            last_backward = backward[:, 0, :]
-            return torch.cat((last_forward, last_backward), dim=-1)
+        # Get the last layer's hidden state
+        last_layer_h_n = h_n[-1]  # Shape: (num_directions, batch, hidden_size)
+
+        if self.bidirectional:
+            # Concatenate the hidden states from both directions
+            last_outputs = torch.cat((last_layer_h_n[0], last_layer_h_n[1]), dim=1)
         else:
-            return self.last_by_index(outputs, lengths)
+            last_outputs = last_layer_h_n[0]
 
-    @staticmethod
-    def split_directions(outputs):
-        direction_size = int(outputs.size(-1) / 2)
-        forward = outputs[:, :, :direction_size]
-        backward = outputs[:, :, direction_size:]
-        return forward, backward
+        # Apply dropout
+        last_outputs = self.dropout(last_outputs)
 
-    @staticmethod
-    def last_by_index(outputs, lengths):
-        # Index of the last output for each sequence.
-        idx = (
-            (lengths - 1)
-            .view(-1, 1)
-            .expand(outputs.size(0), outputs.size(2))
-            .unsqueeze(1)
-        )
-        return outputs.gather(1, idx.to(outputs.device)).squeeze()
+        # Pass through fully connected layer
+        return self.fc(last_outputs)
 
 
 def create_dataloaders(batch_size):
     X, X_test, y, y_test, spk, spk_test = parser(
-        "./free-spoken-digit-dataset-1.0.10/recordings", n_mfcc=13
+        "./recordings", n_mfcc=13
     )
 
     X_train, X_val, y_train, y_val, spk_train, spk_val = train_test_split(
@@ -223,15 +203,15 @@ def create_dataloaders(batch_size):
     validset = FrameLevelDataset(X_val, y_val)
     testset = FrameLevelDataset(X_test, y_test)
 
-    # Initialize the training, val, and test dataloaders
+    # Initialize the training, val, and test dataloaders with custom collate_fn
     train_dataloader = torch.utils.data.DataLoader(
-        trainset, batch_size=batch_size, shuffle=True,
+        trainset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn
     )
     val_dataloader = torch.utils.data.DataLoader(
-        validset, batch_size=batch_size, shuffle=False,
+        validset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
     )
     test_dataloader = torch.utils.data.DataLoader(
-        testset, batch_size=batch_size, shuffle=False,
+        testset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
     )
 
     return train_dataloader, val_dataloader, test_dataloader
@@ -246,23 +226,8 @@ def training_loop(model, train_dataloader, optimizer, criterion):
         # Move data to the appropriate device
         features = features.to(device)
         labels = labels.to(device)
-        #lengths = lengths.to(device)
+        lengths = lengths.to(device)
         
-        '''
-        BONUS
-        '''
-        
-        # lengths should remain on CPU for pack_padded_sequence
-        lengths = lengths.cpu().long()
-
-        # Sort sequences by lengths in descending order
-        lengths, perm_idx = lengths.sort(0, descending=True)
-        features = features[perm_idx]
-        labels = labels[perm_idx]
-        
-        '''
-        '''
-
         # Zero gradients
         optimizer.zero_grad()
         # Forward pass
@@ -286,22 +251,15 @@ def evaluation_loop(model, dataloader, criterion):
     num_batches = 0
     y_pred = []
     y_true = []
+    num_batches = 0
     with torch.no_grad():
         for num_batch, batch in enumerate(dataloader):
             features, labels, lengths = batch
             # Move data to the appropriate device
             features = features.to(device)
             labels = labels.to(device)
-            #lengths = lengths.to(device)
+            lengths = lengths.to(device)
             
-            # lengths should remain on CPU for pack_padded_sequence
-            lengths = lengths.cpu().long()
-            
-            # Sort sequences by length in descending order
-            lengths, sort_idx = lengths.sort(0, descending=True)
-            features = features[sort_idx]
-            labels = labels[sort_idx]
-
             # Forward pass
             logits = model(features, lengths)
             # Compute loss
@@ -317,7 +275,7 @@ def evaluation_loop(model, dataloader, criterion):
 
 
 def train(train_dataloader, val_dataloader, criterion):
-    input_dim = train_dataloader.dataset.feats.shape[-1]
+    input_dim = train_dataloader.dataset.feats[0].shape[-1]
     model = BasicLSTM(
         input_dim,
         rnn_size,
@@ -361,13 +319,14 @@ def train(train_dataloader, val_dataloader, criterion):
             print("Early stopping...")
             break
         
-    print(f"Training took: {time.time() - start_time:.2f} seconds")
+    total_training_time = time.time() - start_time
+    print(f"Training took: {total_training_time:.2f} seconds")
     cm = confusion_matrix(y_pred, y_true, normalize='true')
     plot_confusion_matrix(cm, classes=np.arange(10), normalize=True, title='Validation Confusion Matrix Step 14')
     # Return the best model and the training history
-    checkpoint = torch.load(best_model_path)
+    checkpoint = torch.load(best_model_path, weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
-    return model, history
+    return model, history, total_training_time
 
 
 # Create data loaders
@@ -377,7 +336,7 @@ train_dataloader, val_dataloader, test_dataloader = create_dataloaders(batch_siz
 criterion = nn.CrossEntropyLoss()
 
 # Train the model
-model, history = train(train_dataloader, val_dataloader, criterion)
+model, history, training_time = train(train_dataloader, val_dataloader, criterion)
 
 # Evaluate on the test set
 test_loss, test_pred, test_true = evaluation_loop(model, test_dataloader, criterion)

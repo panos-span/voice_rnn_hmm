@@ -27,7 +27,7 @@
 }
 
 \title{Αναγνώριση Προτύπων \\ 1η Εργαστηριακή Άσκηση \\ Χειμερινό Εξάμηνο 2024-2025 \\ Ε.ΔE.ΜΜ}
-\author{Σπανάκης Παναγιώτης-Αλέξιος (ΑΜ: 03400274) \\ }
+\author{Σπανάκης Παναγιώτης-Αλέξιος (ΑΜ: 03400274) \\ Γιάννης ___ (ΑΜ: _______)}
 \date{08/11/2024}
 
 \begin{document}
@@ -324,6 +324,143 @@ MFCCs αποτελούν πιο διακριτά χαρακτηριστικά π
 
 \section*{Βήμα 8}
 
+\subsection*{Παραγωγή Δεδομένων}
+
+Για την υλοποίηση του συστήματος πρόβλεψης, αρχικά δημιουργήθηκαν ακολουθίες 10 σημείων ημιτόνου και συνημιτόνου με συχνότητα $f = 40$ Hz. Η υλοποίηση πραγματοποιήθηκε μέσω της συνάρτησης \texttt{sample\_waves}:
+
+\begin{itemize}
+   \item Συχνότητα: $f = 40$ Hz
+   \item Αριθμός σημείων: $n\_points = 10$
+   \item Βήμα δειγματοληψίας: $step = f \cdot n\_points$
+   \item Περίοδος: $T = \frac{1}{f}$
+\end{itemize}
+
+Τα σημεία υπολογίζονται ως:
+\begin{equation}
+   t_i = t_{start} + \frac{i}{step}, \quad i = 0,\ldots,n\_points-1
+\end{equation}
+\begin{equation}
+   x_i = \sin(2\pi f t_i), \quad y_i = \cos(2\pi f t_i)
+\end{equation}
+
+\subsection*{Αρχιτεκτονική Νευρωνικών Δικτύων}
+
+Υλοποιήθηκαν και συγκρίθηκαν τρεις διαφορετικές αρχιτεκτονικές αναδρομικών νευρωνικών δικτύων:
+
+\begin{enumerate}
+   \item \textbf{Απλό RNN}: Βασική υλοποίηση αναδρομικού δικτύου
+   \item \textbf{LSTM (Long Short-Term Memory)}: Προηγμένη αρχιτεκτονική με μηχανισμούς πύλης \cite{hochreiter1997long}
+   \item \textbf{GRU (Gated Recurrent Unit)}: Απλοποιημένη έκδοση του LSTM \cite{cho2014learning}
+\end{enumerate}
+
+Η επιλογή των LSTM και GRU έναντι των απλών RNN βασίζεται σε σημαντικά πλεονεκτήματα που έχουν τεκμηριωθεί στη βιβλιογραφία:
+
+\begin{itemize}
+   \item \textbf{Αντιμετώπιση Vanishing Gradient}: Τα απλά RNNs υποφέρουν από το πρόβλημα του vanishing gradient \cite{bengio1994learning}, το οποίο καθιστά δύσκολη την εκπαίδευση σε μακροχρόνιες ακολουθίες. Τα LSTM και GRU, μέσω των μηχανισμών πύλης, επιτρέπουν καλύτερη ροή των gradients κατά την οπισθοδιάδοση \cite{pascanu2013difficulty}.
+   
+   \item \textbf{Μακροπρόθεσμη Μνήμη}: Η αρχιτεκτονική των LSTM σχεδιάστηκε ειδικά για να διατηρεί πληροφορίες για μεγάλα χρονικά διαστήματα \cite{gers1999learning}. Τα GRU προσφέρουν παρόμοια απόδοση με απλούστερη δομή \cite{chung2014empirical}.
+   
+   \item \textbf{Επιλεκτική Ενημέρωση}: Οι πύλες (gates) επιτρέπουν στο δίκτυο να μαθαίνει ποιες πληροφορίες είναι σημαντικές για διατήρηση και ποιες μπορούν να αγνοηθούν \cite{greff2016lstm}. Στα LSTM, αυτό επιτυγχάνεται μέσω τριών πυλών (input, forget, output), ενώ τα GRU χρησιμοποιούν δύο πύλες (reset, update) \cite{cho2014properties}.
+   
+   \item \textbf{Ευρεία Εφαρμογή}: Έχουν αποδειχθεί ιδιαίτερα αποτελεσματικά σε πολλές εφαρμογές όπως:
+   \begin{itemize}
+       \item Επεξεργασία φυσικής γλώσσας \cite{sutskever2014sequence}
+       \item Πρόβλεψη χρονοσειρών \cite{zhang2018deep}
+       \item Αναγνώριση ομιλίας \cite{graves2013speech}
+   \end{itemize}
+\end{itemize}
+
+
+\subsection*{Εκπαίδευση και Αξιολόγηση}
+
+Η εκπαίδευση πραγματοποιήθηκε με τις εξής παραμέτρους:
+\begin{itemize}
+   \item Συνάρτηση κόστους: Mean Squared Error (MSE)
+   \item Βελτιστοποιητής: Adam με αρχικό learning rate 0.001
+   \item Learning rate schedule με μείωση στα epochs 15, 30, και 40
+   \item Batch size: 16
+   \item Αριθμός epochs: 50
+\end{itemize}
+
+Τα δεδομένα χωρίστηκαν σε:
+\begin{itemize}
+   \item 70\% training set
+   \item 20\% validation set
+   \item 10\% test set
+\end{itemize}
+
+
+subsection*{Αποτελέσματα και Ανάλυση}
+
+\subsubsection*{Καμπύλες Εκπαίδευσης}
+
+Από τις γραφικές παραστάσεις του σφάλματος εκπαίδευσης (training loss) και επικύρωσης (validation loss) για κάθε μοντέλο παρατηρούμε:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{gru_loss.png}
+\caption{Καμπύλες εκπαίδευσης GRU}
+\label{fig:gru_history}
+\end{figure}
+
+\begin{enumerate}
+   \item \textbf{GRU}:
+   \begin{itemize}
+       \item Ταχεία σύγκλιση μέσα στα πρώτα 5 epochs
+       \item Σταθεροποίηση του σφάλματος σε πολύ χαμηλές τιμές ($\approx 0.001$)
+       \item Ελάχιστη διαφορά μεταξύ training και validation loss
+   \end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{lstm_loss.png}
+\caption{Καμπύλες εκπαίδευσης LSTM}
+\label{fig:lstm_history}
+\end{figure}
+
+   \item \textbf{LSTM}:
+   \begin{itemize}
+       \item Παρόμοια συμπεριφορά με το GRU
+       \item Ελαφρώς υψηλότερο αρχικό σφάλμα ($\approx 0.28$)
+       \item Εξίσου καλή σύγκλιση σε χαμηλές τιμές σφάλματος
+   \end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{simple_rnn_loss.png}
+\caption{Καμπύλες εκπαίδευσης απλού RNN}
+\label{fig:rnn_history}
+\end{figure}
+
+   \item \textbf{Απλό RNN}:
+   \begin{itemize}
+       \item Πιο αργή σύγκλιση συγκριτικά με LSTM και GRU
+       \item Υψηλότερο τελικό σφάλμα ($\approx 0.06$)
+       \item Εμφανής διαφορά μεταξύ training και validation loss
+   \end{itemize}
+\end{enumerate}
+
+\subsubsection*{Ανάλυση Προβλέψεων}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{pred_step8.png}
+\caption{Σύγκριση προβλέψεων των μοντέλων με τις πραγματικές τιμές}
+\label{fig:predictions}
+\end{figure}
+
+Από τη σύγκριση των προβλέψεων με τις πραγματικές τιμές παρατηρούμε:
+
+\begin{itemize}
+   \item Τα LSTM και GRU παρουσιάζουν σχεδόν ταυτόσημη απόδοση με εξαιρετική ακρίβεια πρόβλεψης
+   \item Το απλό RNN παρουσιάζει σημαντικές αποκλίσεις, ιδιαίτερα στα πρώτα σημεία της ακολουθίας
+   \item Όλα τα μοντέλα συγκλίνουν καλύτερα στα μεσαία και τελικά σημεία της ακολουθίας
+   \item Η μέγιστη απόκλιση του απλού RNN παρατηρείται στο πρώτο σημείο (0.05 έναντι -0.98)
+\end{itemize}
+
+Τα αποτελέσματα επιβεβαιώνουν την ανωτερότητα των αρχιτεκτονικών LSTM και GRU έναντι του απλού RNN για τη συγκεκριμένη εφαρμογή πρόβλεψης χρονοσειρών.
+
+
 \section*{Αναγνώριση Ψηφίων με GMM-HMM}
 
 \subsection*{Βήμα 9: Διαχωρισμός Δεδομένων}
@@ -486,6 +623,10 @@ model = DenseHMM(
 
 Τα αποτελέσματα επιβεβαιώνουν την αποτελεσματικότητα της προσέγγισης GMM-HMM για την αναγνώριση μεμονωμένων ψηφίων, 
 με το μοντέλο να επιτυγχάνει εξαιρετική ακρίβεια στις βέλτιστες διαμορφώσεις του.
+
+\section*{Βήμα 14}
+
+
 
 \bibliographystyle{plainnat}
 \bibliography{references}

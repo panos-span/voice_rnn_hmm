@@ -68,7 +68,7 @@ def prepare_data(n_samples=1000, batch_size=16, test_size=0.2, val_size=0.1):
     )
     val_loader = DataLoader(
         TensorDataset(X_val_tensor, y_val_tensor),
-        batch_size=batch_size, 
+        batch_size=batch_size,
         shuffle=False
     )
     test_loader = DataLoader(
@@ -290,52 +290,36 @@ def plot_learning_curves(history: Dict):
     plt.tight_layout()
 
 
-def plot_predictions(models_results: Dict, true_values: torch.Tensor):
-    """Plot predictions from multiple models against true values."""
-    # Individual model plots
-    fig, axes = plt.subplots(len(models_results), 1, figsize=(15, 5*len(models_results)))
+def plot_loss_curves(train_losses: list, val_losses: list, title: str = "Training and Validation Loss"):
+    """
+    Plot training and validation loss curves.
     
-    for idx, (model_name, predictions) in enumerate(models_results.items()):
-        ax = axes[idx] if len(models_results) > 1 else axes
-        ax.plot(predictions.cpu().numpy().flatten(), 
-                label=f'Predicted ({model_name})')
-        ax.plot(true_values.cpu().numpy().flatten(), 
-                label='True Values', linestyle='--')
-        ax.set_title(f'{model_name} Predictions')
-        ax.set_xlabel('Sample')
-        ax.set_ylabel('Value')
-        ax.legend()
-        ax.grid(True)
+    Args:
+        train_losses (list): List of training losses per epoch
+        val_losses (list): List of validation losses per epoch
+        title (str): Title for the plot
+    """
+    plt.figure(figsize=(10, 6))
     
+    # Plot training loss
+    plt.plot(train_losses, label='Training Loss', color='b', linewidth=2)
+    
+    # Plot validation loss
+    plt.plot(val_losses, label='Validation Loss', color='r', linewidth=2, linestyle='--')
+    
+    # Customize the plot
+    plt.title(title, fontsize=12, pad=15)
+    plt.xlabel('Epoch', fontsize=10)
+    plt.ylabel('Loss', fontsize=10)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend(fontsize=10)
+    
+    # Add minor gridlines
+    plt.minorticks_on()
+    plt.grid(True, which='minor', linestyle=':', alpha=0.4)
+    
+    # Tight layout to prevent label clipping
     plt.tight_layout()
-    
-    # Combined plot
-    plt.figure(figsize=(15, 6))
-    colors = ['r', 'g', 'b']
-    
-    for (model_name, predictions), color in zip(models_results.items(), colors):
-        plt.plot(predictions.cpu().numpy().flatten(), 
-                label=f'Predicted ({model_name})', 
-                color=color, alpha=0.7)
-    
-    plt.plot(true_values.cpu().numpy().flatten(), 
-            label='True Values', 
-            color='k', linestyle='--')
-    plt.title('All Models Predictions vs True Values')
-    plt.xlabel('Sample')
-    plt.ylabel('Value')
-    plt.legend()
-    plt.grid(True)
-    
-    # Plot learning rate schedule
-    if hasattr(models_results, 'learning_rates'):
-        plt.figure(figsize=(10, 4))
-        plt.plot(models_results['learning_rates'])
-        plt.title('Learning Rate Schedule')
-        plt.xlabel('Epoch')
-        plt.ylabel('Learning Rate')
-        plt.yscale('log')
-        plt.grid(True)
     
     plt.show()
     
@@ -449,11 +433,14 @@ def main():
             predictions = model(test_X)
         results[name] = predictions
         
-        # Plot learning curves
-        plot_learning_curves(history)
-        plt.suptitle(f'{name} Training History')
+        # Plot learning curves - FIXED HERE
+        plot_loss_curves(
+            train_losses=history['train_loss'],
+            val_losses=history['val_loss'],
+            title=f'{name} Training History'
+        )
         plt.show()
-    
+
     # Plot predictions for a single sample
     sample_idx = 0  # You can change this to visualize different samples
     plot_single_prediction(results, test_y, sample_idx)
@@ -469,7 +456,6 @@ def main():
         print(f"{name}:")
         print(f"  MSE: {mse:.4f}")
         print(f"  MAE: {mae:.4f}")
-        
         
 if __name__ == "__main__":
     main()
