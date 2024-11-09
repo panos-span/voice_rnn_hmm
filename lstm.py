@@ -35,13 +35,13 @@ best_model_path = os.path.join(checkpoint_dir, 'best_model.pth')
 
 output_dim = 10  # number of digits
 # Hyperparameters
-rnn_size = 64
-num_layers = 2
+rnn_size = 128
+num_layers = 5
 bidirectional = True
-dropout = 0.3
-batch_size = 32
+dropout = 0.6
+batch_size = 64
 patience = 3
-epochs = 25
+epochs = 50
 lr = 1e-3
 weight_decay = 1e-4
 
@@ -192,7 +192,7 @@ class BasicLSTM(nn.Module):
 
 def create_dataloaders(batch_size):
     X, X_test, y, y_test, spk, spk_test = parser(
-        "./recordings", n_mfcc=13
+        "./free-spoken-digit-dataset-1.0.10/recordings", n_mfcc=13
     )
 
     X_train, X_val, y_train, y_val, spk_train, spk_val = train_test_split(
@@ -226,7 +226,7 @@ def training_loop(model, train_dataloader, optimizer, criterion):
         # Move data to the appropriate device
         features = features.to(device)
         labels = labels.to(device)
-        lengths = lengths.to(device)
+        #lengths = lengths.to(device)
         
         # Zero gradients
         optimizer.zero_grad()
@@ -248,7 +248,6 @@ def training_loop(model, train_dataloader, optimizer, criterion):
 def evaluation_loop(model, dataloader, criterion):
     model.eval()
     running_loss = 0.0
-    num_batches = 0
     y_pred = []
     y_true = []
     num_batches = 0
@@ -258,8 +257,7 @@ def evaluation_loop(model, dataloader, criterion):
             # Move data to the appropriate device
             features = features.to(device)
             labels = labels.to(device)
-            lengths = lengths.to(device)
-            
+
             # Forward pass
             logits = model(features, lengths)
             # Compute loss

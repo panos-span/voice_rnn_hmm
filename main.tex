@@ -12,7 +12,6 @@
 \usepackage{booktabs}  % For better looking tables
 \usepackage{hyperref}
 \usepackage{xcolor}
-\usepackage{breakurl}
 \usepackage[numbers]{natbib}
 
 \lstset{
@@ -392,7 +391,12 @@ MFCCs αποτελούν πιο διακριτά χαρακτηριστικά π
 \end{itemize}
 
 
-subsection*{Αποτελέσματα και Ανάλυση}
+\begin{itemize}
+    \item $t_{\text{start}} \sim U(0,T)$
+\end{itemize}
+
+
+\subsection*{Αποτελέσματα και Ανάλυση}
 
 \subsubsection*{Καμπύλες Εκπαίδευσης}
 
@@ -543,7 +547,7 @@ model = DenseHMM(
     \centering
     \includegraphics[width=0.8\textwidth]{hmm_val_cm.png}
     \caption{Κανονικοποιημένο Validation Confusion Matrix για το μοντέλο GMM-HMM}
-    \label{fig:hmm_confusion_matrix}
+    \label{fig:hmm_val_confusion_matrix}
 \end{figure}
 
 \begin{figure}{h}
@@ -551,7 +555,7 @@ model = DenseHMM(
     \includegraphics[width=0.8\textwidth]{hmm_test_cm.png}
     \caption{Κανονικοποιημένο Test Confusion Matrix για το μοντέλο GMM-HMM}
     \setlength{\emergencystretch}{1em}
-    \label{fig:hmm_confusion_matrix}
+    \label{fig:hmm_test_confusion_matrix}
 \end{figure}
 
 
@@ -600,8 +604,8 @@ model = DenseHMM(
     \item \textbf{Βέλτιστη επίδοση}: 99.7\% ακρίβεια με 2 καταστάσεις και 5 μείγματα Γκαουσιανών
     \item \textbf{Αριθμός καταστάσεων}:
           \begin{itemize}
-              \item 2-3 καταστάσεις παρουσίασαν σταθερά υψηλή απόδοση
-              \item 4 καταστάσεις έδειξαν μεγαλύτερη διακύμανση στην απόδοση
+              \item 1-3 καταστάσεις παρουσίασαν σταθερά υψηλή απόδοση
+              \item 1 κατάσταση έδειξε μεγαλύτερη διακύμανση στην απόδοση
           \end{itemize}
     \item \textbf{Αριθμός μειγμάτων}:
           \begin{itemize}
