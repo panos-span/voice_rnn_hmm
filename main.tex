@@ -12,6 +12,8 @@
 \usepackage{booktabs}  % For better looking tables
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{breakurl}
+\usepackage[numbers]{natbib}
 
 \lstset{
   basicstyle=\ttfamily\footnotesize,
@@ -27,7 +29,7 @@
 }
 
 \title{Αναγνώριση Προτύπων \\ 1η Εργαστηριακή Άσκηση \\ Χειμερινό Εξάμηνο 2024-2025 \\ Ε.ΔE.ΜΜ}
-\author{Σπανάκης Παναγιώτης-Αλέξιος (ΑΜ: 03400274) \\ Γιάννης ___ (ΑΜ: _______)}
+\author{Σπανάκης Παναγιώτης-Αλέξιος (ΑΜ: 03400274)}
 \date{08/11/2024}
 
 \begin{document}
@@ -548,6 +550,7 @@ model = DenseHMM(
     \centering
     \includegraphics[width=0.8\textwidth]{hmm_test_cm.png}
     \caption{Κανονικοποιημένο Test Confusion Matrix για το μοντέλο GMM-HMM}
+    \setlength{\emergencystretch}{1em}
     \label{fig:hmm_confusion_matrix}
 \end{figure}
 
@@ -582,7 +585,7 @@ model = DenseHMM(
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{hmm_test_acc_heatmap.png}
+    \includegraphics[width=\textwidth]{hmm_test_acc_heatmap.png}
     \caption{Χάρτης θερμότητας ακρίβειας στο test set ως προς τον αριθμό καταστάσεων και μειγμάτων. 
     Οι τιμές αντιπροσωπεύουν το ποσοστό ακρίβειας (accuracy) για κάθε συνδυασμό παραμέτρων. 
     Σκοτεινότερο κόκκινο υποδεικνύει υψηλότερη ακρίβεια, ενώ το μπλε χαμηλότερη.}
