@@ -682,6 +682,56 @@ EarlyStopping με τα κατάλληλα κριτήρια τερματισμο
 του μοντέλου. Ως έξοδος της συνάρτησης επιστρέφεται το μοντέλο με τα καλύτερα βάρη, το συνολικό χρόνο
 εκπαίδευσης και τα σφάλματα του μοντέλου στο training και validation set.
 
+Αξιοσημείωτο αποτελεί το γεγονός ότι έχουμε ενσωματώσει τον παρακάτω κώδικα 
+για τη διασφάλιση της αναπαραγωγιμότητας των αποτελεσμάτων στο πείραμά μας:
+
+\begin{lstlisting}[language=Python]
+# Set the random seed for reproducibility
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+\end{lstlisting}
+
+Θέτοντας ένα σταθερό \texttt{seed} με τιμή $42$, εξασφαλίζουμε ότι όλες οι τυχαίες διαδικασίες θα παράγουν τα ίδια αποτελέσματα σε κάθε εκτέλεση. Αυτό περιλαμβάνει:
+
+\begin{itemize}
+    \item Την αρχικοποίηση των βαρών του δικτύου ($\mathbf{W}$)
+    \item Την ανάμειξη των δεδομένων εκπαίδευσης ($\mathcal{D}_{train}$)
+    \item Άλλες στοχαστικές διαδικασίες ($\epsilon \sim \mathcal{N}(0,1)$)
+\end{itemize}
+
+Ρυθμίζουμε το \texttt{seed} για διάφορες βιβλιοθήκες:
+\begin{enumerate}
+    \item \texttt{random}: Για βασικές τυχαίες λειτουργίες της Python
+    \item \texttt{numpy}: Για αριθμητικούς υπολογισμούς και πίνακες
+    \item \texttt{pytorch}: Για τις λειτουργίες του νευρωνικού δικτύου
+    \item \texttt{CUDA}: Για υπολογισμούς στην GPU
+\end{enumerate}
+
+Επιπλέον, θέτουμε:
+\[
+\text{cudnn.deterministic} = \text{True} \quad \text{και} \quad \text{cudnn.benchmark} = \text{False}
+\]
+
+Αυτές οι ρυθμίσεις εξασφαλίζουν:
+\begin{equation}
+    \forall \text{ εκτέλεση } i,j: \text{Αποτελέσματα}_i = \text{Αποτελέσματα}_j
+\end{equation}
+
+Η πρακτική αυτή είναι κρίσιμη για:
+\begin{itemize}
+    \item Επιστημονική αναπαραγωγιμότητα
+    \item Αξιοπιστία πειραματικών αποτελεσμάτων
+    \item Εντοπισμό και διόρθωση σφαλμάτων
+    \item Συγκριτική ανάλυση διαφορετικών μοντέλων
+\end{itemize}
+
 \subsection*{2}
 
 Βλ. το αρχείο \texttt{lstm.py} για την υλοποίηση του LSTM δικτύου.
