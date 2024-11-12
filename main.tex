@@ -12,6 +12,7 @@
 \usepackage{booktabs}  % For better looking tables
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{breakurl}
 \usepackage[numbers]{natbib}
 
 \lstset{
@@ -330,18 +331,19 @@ MFCCs αποτελούν πιο διακριτά χαρακτηριστικά π
 Για την υλοποίηση του συστήματος πρόβλεψης, αρχικά δημιουργήθηκαν ακολουθίες 10 σημείων ημιτόνου και συνημιτόνου με συχνότητα $f = 40$ Hz. Η υλοποίηση πραγματοποιήθηκε μέσω της συνάρτησης \texttt{sample\_waves}:
 
 \begin{itemize}
-   \item Συχνότητα: $f = 40$ Hz
-   \item Αριθμός σημείων: $n\_points = 10$
-   \item Βήμα δειγματοληψίας: $step = f \cdot n\_points$
-   \item Περίοδος: $T = \frac{1}{f}$
+    \item Συχνότητα: $f = 40$ Hz
+    \item Αριθμός σημείων: $n\_points = 10$
+    \item Βήμα δειγματοληψίας: $step = f \cdot n\_points$
+    \item Περίοδος: $T = \frac{1}{f}$
+    \item $t_{\text{start}} \sim U(0,T)$
 \end{itemize}
 
 Τα σημεία υπολογίζονται ως:
 \begin{equation}
-   t_i = t_{start} + \frac{i}{step}, \quad i = 0,\ldots,n\_points-1
+    t_i = t_{start} + \frac{i}{step}, \quad i = 0,\ldots,n\_points-1
 \end{equation}
 \begin{equation}
-   x_i = \sin(2\pi f t_i), \quad y_i = \cos(2\pi f t_i)
+    x_i = \sin(2\pi f t_i), \quad y_i = \cos(2\pi f t_i)
 \end{equation}
 
 \subsection*{Αρχιτεκτονική Νευρωνικών Δικτύων}
@@ -349,123 +351,117 @@ MFCCs αποτελούν πιο διακριτά χαρακτηριστικά π
 Υλοποιήθηκαν και συγκρίθηκαν τρεις διαφορετικές αρχιτεκτονικές αναδρομικών νευρωνικών δικτύων:
 
 \begin{enumerate}
-   \item \textbf{Απλό RNN}: Βασική υλοποίηση αναδρομικού δικτύου
-   \item \textbf{LSTM (Long Short-Term Memory)}: Προηγμένη αρχιτεκτονική με μηχανισμούς πύλης \cite{hochreiter1997long}
-   \item \textbf{GRU (Gated Recurrent Unit)}: Απλοποιημένη έκδοση του LSTM \cite{cho2014learning}
+    \item \textbf{RNN}
+    \item \textbf{LSTM (Long Short-Term Memory)}
+    \item \textbf{GRU (Gated Recurrent Unit)}
 \end{enumerate}
 
 Η επιλογή των LSTM και GRU έναντι των απλών RNN βασίζεται σε σημαντικά πλεονεκτήματα που έχουν τεκμηριωθεί στη βιβλιογραφία:
 
 \begin{itemize}
-   \item \textbf{Αντιμετώπιση Vanishing Gradient}: Τα απλά RNNs υποφέρουν από το πρόβλημα του vanishing gradient \cite{bengio1994learning}, το οποίο καθιστά δύσκολη την εκπαίδευση σε μακροχρόνιες ακολουθίες. Τα LSTM και GRU, μέσω των μηχανισμών πύλης, επιτρέπουν καλύτερη ροή των gradients κατά την οπισθοδιάδοση \cite{pascanu2013difficulty}.
-   
-   \item \textbf{Μακροπρόθεσμη Μνήμη}: Η αρχιτεκτονική των LSTM σχεδιάστηκε ειδικά για να διατηρεί πληροφορίες για μεγάλα χρονικά διαστήματα \cite{gers1999learning}. Τα GRU προσφέρουν παρόμοια απόδοση με απλούστερη δομή \cite{chung2014empirical}.
-   
-   \item \textbf{Επιλεκτική Ενημέρωση}: Οι πύλες (gates) επιτρέπουν στο δίκτυο να μαθαίνει ποιες πληροφορίες είναι σημαντικές για διατήρηση και ποιες μπορούν να αγνοηθούν \cite{greff2016lstm}. Στα LSTM, αυτό επιτυγχάνεται μέσω τριών πυλών (input, forget, output), ενώ τα GRU χρησιμοποιούν δύο πύλες (reset, update) \cite{cho2014properties}.
-   
-   \item \textbf{Ευρεία Εφαρμογή}: Έχουν αποδειχθεί ιδιαίτερα αποτελεσματικά σε πολλές εφαρμογές όπως:
-   \begin{itemize}
-       \item Επεξεργασία φυσικής γλώσσας \cite{sutskever2014sequence}
-       \item Πρόβλεψη χρονοσειρών \cite{zhang2018deep}
-       \item Αναγνώριση ομιλίας \cite{graves2013speech}
-   \end{itemize}
-\end{itemize}
+    \item \textbf{Αντιμετώπιση Vanishing Gradient}: Τα απλά RNNs υποφέρουν από το πρόβλημα του vanishing gradient \cite{bengio1994learning}, το οποίο καθιστά δύσκολη την εκπαίδευση σε μακροχρόνιες ακολουθίες. Τα LSTM και GRU, μέσω των μηχανισμών πύλης, επιτρέπουν καλύτερη ροή των gradients κατά την οπισθοδιάδοση \cite{pascanu2013difficulty}.
 
+    \item \textbf{Μακροπρόθεσμη Μνήμη}: Η αρχιτεκτονική των LSTM σχεδιάστηκε ειδικά για να διατηρεί πληροφορίες για μεγάλα χρονικά διαστήματα \cite{gers1999learning}. Τα GRU προσφέρουν παρόμοια απόδοση με απλούστερη δομή \cite{chung2014empirical}.
+
+    \item \textbf{Επιλεκτική Ενημέρωση}: Οι πύλες (gates) επιτρέπουν στο δίκτυο να μαθαίνει ποιες πληροφορίες είναι σημαντικές για διατήρηση και ποιες μπορούν να αγνοηθούν \cite{greff2016lstm}. Στα LSTM, αυτό επιτυγχάνεται μέσω τριών πυλών (input, forget, output), ενώ τα GRU χρησιμοποιούν δύο πύλες (reset, update) \cite{cho2014properties}.
+
+    \item \textbf{Ευρεία Εφαρμογή}: Έχουν αποδειχθεί ιδιαίτερα αποτελεσματικά σε πολλές εφαρμογές όπως:
+          \begin{itemize}
+              \item Επεξεργασία φυσικής γλώσσας \cite{sutskever2014sequence}
+              \item Πρόβλεψη χρονοσειρών \cite{zhang2018deep}
+              \item Αναγνώριση ομιλίας \cite{graves2013speech}
+          \end{itemize}
+\end{itemize}
 
 \subsection*{Εκπαίδευση και Αξιολόγηση}
 
 Η εκπαίδευση πραγματοποιήθηκε με τις εξής παραμέτρους:
 \begin{itemize}
-   \item Συνάρτηση κόστους: Mean Squared Error (MSE)
-   \item Βελτιστοποιητής: Adam με αρχικό learning rate 0.001
-   \item Learning rate schedule με μείωση στα epochs 15, 30, και 40
-   \item Batch size: 16
-   \item Αριθμός epochs: 50
+    \item Συνάρτηση κόστους: Mean Squared Error (MSE)
+    \item Βελτιστοποιητής: Adam με αρχικό learning rate 0.001
+    \item Learning rate schedule με μείωση στα epochs 15, 30, και 40
+    \item Batch size: 16
+    \item Αριθμός epochs: 50
 \end{itemize}
 
 Τα δεδομένα χωρίστηκαν σε:
 \begin{itemize}
-   \item 70\% training set
-   \item 20\% validation set
-   \item 10\% test set
+    \item 70\% training set
+    \item 20\% validation set
+    \item 10\% test set
 \end{itemize}
 
+subsection*{Αποτελέσματα και Ανάλυση}
 
-\begin{itemize}
-    \item $t_{\text{start}} \sim U(0,T)$
-\end{itemize}
-
-
-\subsection*{Αποτελέσματα και Ανάλυση}
+% edw pinakas me ta apotelesmata gia ta 3 models
 
 \subsubsection*{Καμπύλες Εκπαίδευσης}
 
 Από τις γραφικές παραστάσεις του σφάλματος εκπαίδευσης (training loss) και επικύρωσης (validation loss) για κάθε μοντέλο παρατηρούμε:
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{gru_loss.png}
-\caption{Καμπύλες εκπαίδευσης GRU}
-\label{fig:gru_history}
+    \centering
+    \includegraphics[width=0.8\textwidth]{gru_loss.png}
+    \caption{Καμπύλες εκπαίδευσης GRU}
+    \label{fig:gru_history}
 \end{figure}
 
 \begin{enumerate}
-   \item \textbf{GRU}:
-   \begin{itemize}
-       \item Ταχεία σύγκλιση μέσα στα πρώτα 5 epochs
-       \item Σταθεροποίηση του σφάλματος σε πολύ χαμηλές τιμές ($\approx 0.001$)
-       \item Ελάχιστη διαφορά μεταξύ training και validation loss
-   \end{itemize}
+    \item \textbf{GRU}:
+          \begin{itemize}
+              \item Ταχεία σύγκλιση μέσα στα πρώτα 5 epochs
+              \item Σταθεροποίηση του σφάλματος σε πολύ χαμηλές τιμές ($\approx 0.001$)
+              \item Ελάχιστη διαφορά μεταξύ training και validation loss
+          \end{itemize}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{lstm_loss.png}
-\caption{Καμπύλες εκπαίδευσης LSTM}
-\label{fig:lstm_history}
-\end{figure}
+          \begin{figure}[h]
+              \centering
+              \includegraphics[width=0.8\textwidth]{lstm_loss.png}
+              \caption{Καμπύλες εκπαίδευσης LSTM}
+              \label{fig:lstm_history}
+          \end{figure}
 
-   \item \textbf{LSTM}:
-   \begin{itemize}
-       \item Παρόμοια συμπεριφορά με το GRU
-       \item Ελαφρώς υψηλότερο αρχικό σφάλμα ($\approx 0.28$)
-       \item Εξίσου καλή σύγκλιση σε χαμηλές τιμές σφάλματος
-   \end{itemize}
+    \item \textbf{LSTM}:
+          \begin{itemize}
+              \item Παρόμοια συμπεριφορά με το GRU
+              \item Ελαφρώς υψηλότερο αρχικό σφάλμα ($\approx 0.28$)
+              \item Εξίσου καλή σύγκλιση σε χαμηλές τιμές σφάλματος
+          \end{itemize}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{simple_rnn_loss.png}
-\caption{Καμπύλες εκπαίδευσης απλού RNN}
-\label{fig:rnn_history}
-\end{figure}
+          \begin{figure}[h]
+              \centering
+              \includegraphics[width=0.8\textwidth]{simple_rnn_loss.png}
+              \caption{Καμπύλες εκπαίδευσης απλού RNN}
+              \label{fig:rnn_history}
+          \end{figure}
 
-   \item \textbf{Απλό RNN}:
-   \begin{itemize}
-       \item Πιο αργή σύγκλιση συγκριτικά με LSTM και GRU
-       \item Υψηλότερο τελικό σφάλμα ($\approx 0.06$)
-       \item Εμφανής διαφορά μεταξύ training και validation loss
-   \end{itemize}
+    \item \textbf{Απλό RNN}:
+          \begin{itemize}
+              \item Πιο αργή σύγκλιση συγκριτικά με LSTM και GRU
+              \item Υψηλότερο τελικό σφάλμα ($\approx 0.06$)
+              \item Εμφανής διαφορά μεταξύ training και validation loss
+          \end{itemize}
 \end{enumerate}
 
 \subsubsection*{Ανάλυση Προβλέψεων}
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{pred_step8.png}
-\caption{Σύγκριση προβλέψεων των μοντέλων με τις πραγματικές τιμές}
-\label{fig:predictions}
+    \centering
+    \includegraphics[width=0.8\textwidth]{pred_step8.png}
+    \caption{Σύγκριση προβλέψεων των μοντέλων με τις πραγματικές τιμές}
+    \label{fig:predictions}
 \end{figure}
 
 Από τη σύγκριση των προβλέψεων με τις πραγματικές τιμές παρατηρούμε:
 
 \begin{itemize}
-   \item Τα LSTM και GRU παρουσιάζουν σχεδόν ταυτόσημη απόδοση με εξαιρετική ακρίβεια πρόβλεψης
-   \item Το απλό RNN παρουσιάζει σημαντικές αποκλίσεις, ιδιαίτερα στα πρώτα σημεία της ακολουθίας
-   \item Όλα τα μοντέλα συγκλίνουν καλύτερα στα μεσαία και τελικά σημεία της ακολουθίας
-   \item Η μέγιστη απόκλιση του απλού RNN παρατηρείται στο πρώτο σημείο (0.05 έναντι -0.98)
+    \item Τα LSTM και GRU παρουσιάζουν σχεδόν ταυτόσημη απόδοση με εξαιρετική ακρίβεια πρόβλεψης
+    \item Το απλό RNN παρουσιάζει σημαντικές αποκλίσεις, ιδιαίτερα στα πρώτα σημεία της ακολουθίας
+    \item Όλα τα μοντέλα συγκλίνουν καλύτερα στα μεσαία και τελικά σημεία της ακολουθίας
+    \item Η μέγιστη απόκλιση του απλού RNN παρατηρείται στο πρώτο σημείο (0.05 έναντι -0.98)
 \end{itemize}
 
 Τα αποτελέσματα επιβεβαιώνουν την ανωτερότητα των αρχιτεκτονικών LSTM και GRU έναντι του απλού RNN για τη συγκεκριμένη εφαρμογή πρόβλεψης χρονοσειρών.
-
 
 \section*{Αναγνώριση Ψηφίων με GMM-HMM}
 
@@ -547,7 +543,7 @@ model = DenseHMM(
     \centering
     \includegraphics[width=0.8\textwidth]{hmm_val_cm.png}
     \caption{Κανονικοποιημένο Validation Confusion Matrix για το μοντέλο GMM-HMM}
-    \label{fig:hmm_val_confusion_matrix}
+    \label{fig:hmm_confusion_matrix}
 \end{figure}
 
 \begin{figure}{h}
@@ -555,10 +551,8 @@ model = DenseHMM(
     \includegraphics[width=0.8\textwidth]{hmm_test_cm.png}
     \caption{Κανονικοποιημένο Test Confusion Matrix για το μοντέλο GMM-HMM}
     \setlength{\emergencystretch}{1em}
-    \label{fig:hmm_test_confusion_matrix}
+    \label{fig:hmm_confusion_matrix}
 \end{figure}
-
-
 
 \subsection*{Εκπαίδευση Μοντέλων (Βήμα 11)}
 Για την αναγνώριση ψηφίων, εκπαιδεύτηκαν 10 ξεχωριστά GMM-HMM μοντέλα (ένα για κάθε ψηφίο) με τον αλγόριθμο Expectation-Maximization. Διερευνήθηκε ένα εύρος παραμέτρων με:
@@ -590,9 +584,9 @@ model = DenseHMM(
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{hmm_test_acc_heatmap.png}
-    \caption{Χάρτης θερμότητας ακρίβειας στο test set ως προς τον αριθμό καταστάσεων και μειγμάτων. 
-    Οι τιμές αντιπροσωπεύουν το ποσοστό ακρίβειας (accuracy) για κάθε συνδυασμό παραμέτρων. 
-    Σκοτεινότερο κόκκινο υποδεικνύει υψηλότερη ακρίβεια, ενώ το μπλε χαμηλότερη.}
+    \caption{Χάρτης θερμότητας ακρίβειας στο test set ως προς τον αριθμό καταστάσεων και μειγμάτων.
+        Οι τιμές αντιπροσωπεύουν το ποσοστό ακρίβειας (accuracy) για κάθε συνδυασμό παραμέτρων.
+        Σκοτεινότερο κόκκινο υποδεικνύει υψηλότερη ακρίβεια, ενώ το μπλε χαμηλότερη.}
     \label{fig:test_acc_heatmap}
 \end{figure}
 
@@ -604,8 +598,8 @@ model = DenseHMM(
     \item \textbf{Βέλτιστη επίδοση}: 99.7\% ακρίβεια με 2 καταστάσεις και 5 μείγματα Γκαουσιανών
     \item \textbf{Αριθμός καταστάσεων}:
           \begin{itemize}
-              \item 1-3 καταστάσεις παρουσίασαν σταθερά υψηλή απόδοση
-              \item 1 κατάσταση έδειξε μεγαλύτερη διακύμανση στην απόδοση
+              \item 2-3 καταστάσεις παρουσίασαν σταθερά υψηλή απόδοση
+              \item 4 καταστάσεις έδειξαν μεγαλύτερη διακύμανση στην απόδοση
           \end{itemize}
     \item \textbf{Αριθμός μειγμάτων}:
           \begin{itemize}
@@ -628,10 +622,259 @@ model = DenseHMM(
     \item Αξιόπιστη εκτίμηση της πραγματικής απόδοσης του μοντέλου
 \end{itemize}
 
-Τα αποτελέσματα επιβεβαιώνουν την αποτελεσματικότητα της προσέγγισης GMM-HMM για την αναγνώριση μεμονωμένων ψηφίων, 
+Τα αποτελέσματα επιβεβαιώνουν την αποτελεσματικότητα της προσέγγισης GMM-HMM για την αναγνώριση μεμονωμένων ψηφίων,
 με το μοντέλο να επιτυγχάνει εξαιρετική ακρίβεια στις βέλτιστες διαμορφώσεις του.
 
 \section*{Βήμα 14}
+\subsection*{1}
+
+Σε αυτό το ερώτημα τρποποιήθηκαν τμήματα του κώδικα του αρχείου \texttt{lstm.py}
+για τις ανάγκες του ερωτήματος 14. Συγκεκριμένα τροποιήθηκαν οι εξής κλάσσεις:
+
+\begin{itemize}
+    \item \textbf{EarlyStopping}
+    \item \textbf{FrameLevelDataset}
+    \item \textbf{BasicLSTM}
+\end{itemize}
+
+To \textbf{EarlyStopping} έχει υλοποιηθεί με κριτηρίο τερματισμού το validation
+loss, δηλαδή αν δεν βελτιώνεται (μικραίνει το σφάλμα) να τερματίζει η
+διαδικασία του training. H υλοποίηση του \textbf{FrameLevelDataset} έχει ως
+στόχο την δημιουργία ενός dataset το οποίο θα επιστρέφει ακολουθίες με μήκος
+ίσο με το μέγιστο μήκος από τις ακολουθίες που δόθηκαν ως όρισμα κατά την
+αρχικοποιήση του FrameLevelDataset. Αυτό επιτυγχάνεται πραγματοποιώντας padding
+στις ακολουθίες με μικρότερο μήκος από το μέγιστο μήκος. Τέλος, η κλάση
+\textbf{BasicLSTM} είναι μια συνηθισμένη υλοποίηση ενός LSTM δικτύου στο οποίο
+έχει προστεθεί ένα dropout layer για την μείωση του overfitting και ένα fc
+layer για τον μετασχηματισμό των εξόδων του LSTM σε κατάλληλο shape για την
+πραγματοποιήση του classification. Επιπλέον, από τα αποτέλεσμα που επιστρέφει
+το lstm layer, δηλαδή όλα τα $h_t$, εξάγεται το $h_t$, το οποίο αντιστοιχεί στο
+τελευταίο χρονικό βήμα της ακολουθίας, δηλαδή πριν το padding. Αυτο
+επιτυχαγχάνεται με την χρήση της μεθόδου \texttt{last\_timestep}
+
+Επιπρόσθετα τροποποιήθηκαν οι παρακάτω συναρτήσεις, οι οποίες σχετίζονται
+με την εκπαίδευση και την αξιολόγηση του μοντέλου:
+
+\begin{itemize}
+    \item \texttt{create\_dataloaders}
+    \item \texttt{training\_loop}
+    \item \texttt{evaluation\_loop}
+    \item \texttt{train}
+\end{itemize}
+
+Η συνάρτηση \texttt{create\_dataloaders} δημιουργεί τα dataloaders για το training το validation και test set.
+Η συνάρτηση \texttt{training\_loop} είναι υπεύθυνη για την εκπαίδευση του μοντέλου. Είναι η συνάρτηση στην οποία
+πραγματοποιούνται οι διαδικασίες για την κάθε εποχής, όπως:
+
+\begin{itemize}
+    \item Cast των μεταβλητών στο κατάλληλο device
+    \item Μηδενισμός των gradient Values
+    \item Υπολογισμός του loss
+    \item Πραγματοποιήση backpropagation
+    \item Ενημέρωση των βαρών
+\end{itemize}
+
+Παρόμοια, η συνάρτηση \texttt{evaluation\_loop} είναι υπεύθυνη
+για την αξιολόγηση του μοντέλου στο validation set, χωρίς να γίνεται backpropagation.
+Τέλος, η συνάρτηση \texttt{train} είναι υπεύθυνη για την διαδικασίας της εκπαίδευση του μοντέλου.
+Μέσα σε αυτή την συνάρτηση καλούνται οι παραπάνω συναρτήσεις, αρχικοποιείται ο optimizer και το
+EarlyStopping με τα κατάλληλα κριτήρια τερματισμού, μαζί με την αποθήκευση των βέλτιστων βαρών
+του μοντέλου. Ως έξοδος της συνάρτησης επιστρέφεται το μοντέλο με τα καλύτερα βάρη, το συνολικό χρόνο
+εκπαίδευσης και τα σφάλματα του μοντέλου στο training και validation set.
+
+\subsection*{2}
+
+Βλ. το αρχείο \texttt{lstm.py} για την υλοποίηση του LSTM δικτύου.
+
+%% ή ενα σνιππετ απο τον κώδικα με το ινιτ και το φοργορντ
+
+Παράμετροι που χρησιμοποιήθηκαν για την αρχικοποιήση του LSTM:
+
+\begin{itemize}
+    \item \textbf{Hidden size}: 64
+    \item \textbf{Number of layers}: 2
+    \item \textbf{Output size}: 10
+    \item \textbf{Epochs}: 12
+    \item \textbf{Learning rate}: 0.001
+    \item \textbf{Bidirectional}: False
+    \item \textbf{Batch size}: 32
+\end{itemize}
+
+\subsection*{3}
+
+Εκπαιδεύοντας το μοντέλο με optimizer τον αλγόριθμο Adam, το learning rate 0.001 και το loss function το \texttt{CrossEntropyLoss},
+όπου το συγκεκριμένο loss function είναι κατάλληλο για το πρόβλημα της mutliclass ταξινόμησης,  το μοντέλο εκπαιδεύτηκε για 12 εποχές.
+
+Η πορεία του training loss και του validation loss φαίνεται στο Σχήμα \ref{fig:loss_plot_lstm}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{tr_loss_lstm.png}
+    \caption{Πορεία του training loss κατά την διάρκεια της εκπαίδευσης}
+    \label{fig:loss_plot_lstm}
+\end{figure}
+
+Αρχικά, το μοντέλο παρουσιάζει υψηλή τιμή απώλειας $L_0 \approx 2.0$ στην εποχή $e_0$, που είναι χαρακτηριστικό της φάσης αρχικοποίησης της εκπαίδευσης.
+Παρατηρείται σημαντική μείωση της απώλειας κατά τη διάρκεια των εποχών $e_0$ έως $e_2$, που αναπαρίσταται από τη συνάρτηση:
+
+\[
+    \frac{\Delta L}{\Delta e} \gg 0 \text{ για } e \in [0,2]
+\]
+
+Ο ρυθμός βελτίωσης μειώνεται μετά το $e_2$, με τη συνάρτηση απώλειας $L(e)$ να επιδεικνύει ασυμπτωτική συμπεριφορά:
+
+\[
+    \lim_{e \to 10} L(e) \approx 0.1
+\]
+
+Η καμπύλη απώλειας παρουσιάζει χαρακτηριστικά πλατό στο διάστημα $e \in [4,6]$, ακολουθούμενη από σταδιακή βελτιστοποίηση όπου:
+
+\[
+    \frac{d L}{d e} < 0 \text{ αλλά } \left|\frac{d L}{d e}\right| \ll \left|\frac{d L}{d e}\right|_{e \in [0,2]}
+\]
+
+Η συνολική δυναμική της εκπαίδευσης μπορεί να χαρακτηριστεί από μια μονότονα φθίνουσα συνάρτηση χωρίς σημαντικά τοπικά μέγιστα, υποδεικνύοντας βέλτιστες ιδιότητες σύγκλισης:
+
+\[
+    L(e_1) > L(e_2) \text{ για όλα τα } e_1 < e_2 \text{ όπου } e \in [0,10]
+\]
+
+Η συμπεριφορά αυτή υποδηλώνει μια υγιή διαδικασία εκπαίδευσης, με την απουσία υπερπροσαρμογής και την επίτευξη σταθερής σύγκλισης προς ένα τοπικό ελάχιστο.
+
+\subsection*{4}
+
+Ξαναεκπαιδεύοντας το μοντέλο μας με τον ίδιο τρόπο, αλλά αυτή τη φορά εμφανίζοντας και το validation loss, λαμβάνουμε το Σχήμα \ref{fig:tr_val_loss_plot_lstm}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{tr_val_loss_lstm.png}
+    \caption{Πορεία του training και validation loss κατά την διάρκεια της εκπαίδευσης}
+    \label{fig:tr_val_loss_plot_lstm}
+\end{figure}
+
+Το γράφημα απεικονίζει το training loss (μπλε) και validaiton loss (κόκκινο) για $12$ εποχές ενός μοντέλου LSTM.
+Και οι δύο καμπύλες ξεκινούν από διαφορετικά σημεία (training στο $\sim2.0$, validation στο $\sim1.35$)
+και δείχνουν ταχεία αρχική μείωση μέχρι την εποχή $2$. Γύρω στις εποχές $2$-$3$, οι καμπύλες τέμνονται και
+αρχίζουν να ακολουθούν παρόμοια πορεία, συνεχίζοντας να μειώνονται αλλά με πολύ βραδύτερο ρυθμό. Μετά την εποχή $6$,
+οι καμπύλες παραμένουν πολύ κοντά αλλά δείχνουν ελαφρά απόκλιση, με το training loss να πέφτει ελαφρώς κάτω από το validation loss.
+
+Το validation loss παρουσιάζει μικρές διακυμάνσεις στις τελευταίες εποχές ($8$-$12$), ενώ το training loss διατηρεί
+μια πιο ομαλή πτωτική τάση. Σημαντικό είναι ότι το validation loss δεν δείχνει σημαντική αύξηση σε σύγκριση με το trainning loss,
+υποδεικνύοντας ότι το μοντέλο δεν κάνει overfitting. Και τα 2 είδη loss συγκλίνουν σε τιμές
+γύρω στο $0.1$-$0.2$ μέχρι την εποχή $11$, υποδεικνύοντας καλή απόδοση και γενίκευση του μοντέλου.
+
+\subsection*{5}
+Το dropout και το L2 Regularization είναι δύο τεχνικές που
+χρησιμοποιούνται για να μειώσουν το overfitting στα νευρωνικά δίκτυα.
+Το dropout είναι μια τεχνική που εφαρμόζεται στα layers του
+νευρωνικού δικτύου κατά την εκπαίδευση, τα οποία ανάλογα με την ορίσμενη
+πιθανότητα, κάνουν "drop" (μηδενίζουν) κάποια στοιχεία που δέχονται ως
+είσοδο. Στην ουσία μηδενίζουν κάποια στοιχεία που θα δωθούν στο επόμενο
+επίπεδο του δικτύου. Από την άλλη, το L2 Regularization είναι μια
+τεχνική που προστίθεται στο loss function, το οποίο δίνει "ποίνη"
+στα βάρη του μοντέλου όταν αυτά γίνονται πολύ μεγάλα.
+
+\subsection*{6}
+
+To \textbf{EarlyStopping} έχει 2 χρησιμότητες:
+
+\begin{enumerate}
+    \item Επίτρεπει την περάτωση του δικτού κατά την εκπαίδευση, ανάλογα το κριτηρίο τερματισμού
+          που έχει ορισθεί. Αυτό έχει ως αποτέλεσμα την εξοικονόμηση χρόνου και πόρων,
+          καθώς δεν θα εκπαιδευθεί το μοντέλο για περισσότερες εποχές από όσο χρειάζεται.
+
+    \item Είναι μία τεχνική που χρησιμοποιείται για την αποφυγή του overfitting.
+          Η "έγκαιρη" περάτωση του μοντέλου, ουσιαστικά δεν του επιτρέπει να μάθει
+          επιπλέον patterns τα οποία μπορεί να χαρακτηρίζουν το training set.
+\end{enumerate}
+
+Στη συνέχεια, με την αξιοποίηση της κλάσης \textbf{EarlyStopping} μπορούμε να επιτύχουμε την αυτόματη
+αποθήκευση του μοντέλου με τα βέλτιστα βάρη, όταν το validation loss δεν βελτιώνεται για έναν
+συγκεκριμένο αριθμό εποχών (στην περίπτωσή μας για $3$ εποχές). Με αυτόν τον τρόπο, αποθηκεύουμε
+το μοντέλο με τα βέλτιστα βάρη, το οποίο μπορεί να χρησιμοποιηθεί για την εκτίμηση της απόδοσης
+του μοντέλου στο test set.
+
+Συγκεκριμένα, χρησιμοποιούμε τη συνάρτηση texttt{torch.save} για την αποθήκευση του μοντέλου
+σε μορφή \texttt{pickle}, το οποίο μπορεί να ανακτηθεί αργότερα με τη χρήση της συνάρτησης
+\texttt{torch.load}. 
+
+
+\subsection*{7}
+Σε ένα κλασίκο μοντέλο RNN (LSTM) ως είσοδος δίνεται μία ακολουθία $x_t$ για $t=1,2...T$
+η οποία επεξεργάζεται προς τα μία χρονική κατέυθνηση από το μοντέλο και παράγει για κάθε $t$
+ένα διάνυσμα $h_t$. Στην περίπτωση του bidirectional LSTM, το μοντέλο επεξεργάζεται την ακολουθία
+προς 2 κατευθύνσεις, δηλαδή από το πρώτο χρονικό βήμα προς το τελευταίο και αντίστροφα, δηλαδή
+σαν είχε δοθεί ως είσοδος η ακολουθια $x_t$ για $t=Τ,Τ-1...1$.
+Έτσι,για κάθε χρονικό βήμα $t$ το μοντέλο παράγει δύο διανύσματα $h_t^{(f)}$ και $h_t^{(b)}$ τα οποία
+αντιστοιχούν στην κατεύθυνση προς τα μπροστά και προς τα πίσω αντίστοιχα. Τα δύο αυτά διανύσματα
+συνδυάζονται συνήθως με concatenate για την παραγωγή του τελικού διανύσματος $h_t$. Συνεπώς το
+$h_t$ θα έχει διπλάσιο μέγεθος από το αρχικό διάνυσμα $h_t$ που παράγει ένα κλασικό LSTM.
+Αυτό έχει ως αποτέλεσμα το μοντέλο να είναι περισσότερο υπολογιστικά ακριβές αλλά έχει το πλεονέκτημα
+πως σε κάθε χρονικό βήμα της ακολουθίας συνδυάζει πληροφορίες και από το παρελθόν και από το μέλλον,
+το οποίο σε πολλές περιπτώσεις μπορεί να βελτιώσει την απόδοση του μοντέλου.
+
+\subsection*{8}
+Για την υλοποιήση του ερωτήματος αυτού έχει δημιουργηθεί η συνάρτηση
+\texttt{collate\_fn} η οποία δίνεται σαν όρισμα στον dataloader.
+Ο ρόλος της \texttt{collate\_fn} είναι όταν καλείται ο dataloader
+να επιστρέφει batches τα οποία είναι ταξινομημένα κατά φθίνουσα σειρά
+με βάση το μήκος των ακολουθιών και ύστερα να πραγματοποιεί padding
+στις ακολουθίες ώστε να έχουν το ίδιο μήκος. Επίσης, τα labels και
+τα lengths των ακολουθιών αλλάζουν και αυτά με βάση την ταξινόμηση.
+
+Το επόμενος μέρος κώδικα που τροποποιήθηκε είναι η μέγεθος
+\texttt{forward} της κλάσσης \textbf{BasicLSTM}. Σε αυτό το σημείο, αυτό που
+προστέθηκε είναι η χρήση του \texttt{pack\_padded\_sequence} το οποίο
+φέρνει τα inputs σε μια packed μορφή που μπορεί να
+χρησιμοποιήσει το LSTM. Οι έξοδοι του LSTM είναι σε packed μορφή
+και για να έρθουν στην αναμενόμενη μορφή τους μορφή
+(N, seq\_leq, hidden\_size) χρησιμοποιείται το \texttt{pad\_packed\_sequence}.
+Τέλος, καθώς υπάρχουν διαφορετικά μήκη ακολουθιών,
+το τελευταίο χρονικό βήμα της ακολουθίας εξάγεται με την
+χρήση της μεθόδου \texttt{last\_timestep}
+
+Όπως ήταν αναμένομενο για μεγάλα \texttt{hidden\_size} και \texttt{num\_layers} το μοντέλο
+εκπαιδεύτεται αρκέτα πιο γρήγορα σε σύγκριση με το μοντέλο που δέχεται
+τα ορίσματα σε κανονική μορφή. Αυτό συμβαίνει γιατί το packed sequence
+επιτρέπει στο LSTM να μην υπολογίζει τα μηδενικά στοιχεία του padding
+και έτσι επιταχύνει την διαδικασία του training. Βέβαια, σε μικρά αρχικοποιήμενα
+δίκτυα το packed sequence δεν έχει κάποιο ιδιαίτερο όφελος
+στην ταχύτητα του training, αντίθετα μπορεί να υπάρξει κάποια αύξηση
+στον χρόνο εκπαίδευσης, λόγω του sorting των ακολουθιών που
+πραγματοποιείται.
+
+Επιπλέον, το μοντέλο εμφανίζει καλύτερη απόδοση στο validation set σε σχέση με το μοντέλο
+που δέχεται τα ορίσματα σε κανονική μορφή. Το τελικό training και validation loss graph
+με τις τελικές παραμέτρους του μοντέλου μας είναι το παρακάτω (Σχήμα \ref{fig:tr_val_loss_plot_lstm_packed})
+καθώς και το test confusion matrix (Σχήμα \ref{fig:confusion_matrix_lstm_packed}), με τελικό validation 
+accuracy $0.9926$ και test accuracy $0.9967$.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{tr_val_loss_lstm_packed.png}
+    \caption{Πορεία του training και validation loss κατά την διάρκεια της εκπαίδευσης με packed sequence}
+    \label{fig:tr_val_loss_plot_lstm_packed}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\textwidth]{confusion_matrix_lstm_packed.png}
+    \caption{Confusion matrix του μοντέλου με packed sequence}
+    \label{fig:confusion_matrix_lstm_packed}
+\end{figure}
+
+Τελικές παράμετροι:
+
+\begin{itemize}
+    \item \textbf{Hidden size}: 128
+    \item \textbf{Number of layers}: 5
+    \item \textbf{Dropout}: 0.6
+    \item \textbf{Epochs}: 50
+    \item \textbf{Learning rate}: 0.001
+    \item \textbf{Bidirectional}: True
+    \item \textbf{Batch size}: 64
+    \item \textbf{EarlyStopping patience}: 3
+\end{itemize}
 
 
 

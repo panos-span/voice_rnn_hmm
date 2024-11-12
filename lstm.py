@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 from plot_confusion_matrix import plot_confusion_matrix
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 import time
 import random
 
@@ -319,11 +319,14 @@ def train(train_dataloader, val_dataloader, criterion):
         
     total_training_time = time.time() - start_time
     print(f"Training took: {total_training_time:.2f} seconds")
-    cm = confusion_matrix(y_pred, y_true, normalize='true')
-    plot_confusion_matrix(cm, classes=np.arange(10), normalize=True, title='Validation Confusion Matrix Step 14')
     # Return the best model and the training history
     checkpoint = torch.load(best_model_path, weights_only=True)
     model.load_state_dict(checkpoint['model_state_dict'])
+    valid_loss, y_pred, y_true = evaluation_loop(model, val_dataloader, criterion)
+    cm = confusion_matrix(y_pred, y_true, normalize='true')
+    plot_confusion_matrix(cm, classes=np.arange(10), normalize=True, title='Validation Confusion Matrix Step 14')
+    print(classification_report(y_true, y_pred, target_names=[str(i) for i in range(10)]))
+    print(f"Accuracy on validation set: {accuracy_score(y_true, y_pred):.4f}")
     return model, history, total_training_time
 
 
@@ -372,9 +375,6 @@ test_cm = confusion_matrix(test_pred, test_true, normalize='true')
 plot_confusion_matrix(test_cm, classes=np.arange(10), normalize=True, title='Test Confusion Matrix Step 14')
 
 plt.tight_layout()
-plt.show()      
-
-# print classification report
-from sklearn.metrics import classification_report
+plt.show()
 
 print(classification_report(test_true, test_pred, target_names=[str(i) for i in range(10)]))
